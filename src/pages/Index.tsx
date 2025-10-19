@@ -34,6 +34,8 @@ const Index = () => {
   const [showAddPlatform, setShowAddPlatform] = useState(false);
   const [showAddGame, setShowAddGame] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [showVideoDownloader, setShowVideoDownloader] = useState(false);
+  const [videoUrl, setVideoUrl] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [activeView, setActiveView] = useState<'desktop' | 'mobile'>('desktop');
   const { toast } = useToast();
@@ -302,6 +304,14 @@ const Index = () => {
               <Button
                 variant="ghost"
                 size="icon"
+                onClick={() => setShowVideoDownloader(true)}
+                className="text-white hover:bg-white/10"
+              >
+                <Icon name="Download" size={20} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setShowSearch(true)}
                 className="text-white hover:bg-white/10"
               >
@@ -557,6 +567,91 @@ const Index = () => {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={showVideoDownloader} onOpenChange={setShowVideoDownloader}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Скачать видео</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="video-url">Вставьте ссылку на видео</Label>
+              <Input
+                id="video-url"
+                placeholder="https://youtube.com/..."
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Поддерживается: YouTube, ВКонтакте, TikTok, RuTube, Instagram, Facebook
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  if (videoUrl) {
+                    window.open(`https://savefrom.net/?url=${encodeURIComponent(videoUrl)}`, '_blank');
+                    toast({ title: 'Открываем загрузчик', description: 'Сервис SaveFrom.net' });
+                  } else {
+                    toast({ title: 'Введите ссылку', description: 'Вставьте URL видео', variant: 'destructive' });
+                  }
+                }}
+              >
+                <Icon name="Download" size={16} className="mr-2" />
+                SaveFrom.net
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  if (videoUrl) {
+                    window.open(`https://loader.to/ru/youtube-downloader/?url=${encodeURIComponent(videoUrl)}`, '_blank');
+                    toast({ title: 'Открываем загрузчик', description: 'Сервис Loader.to' });
+                  } else {
+                    toast({ title: 'Введите ссылку', description: 'Вставьте URL видео', variant: 'destructive' });
+                  }
+                }}
+              >
+                <Icon name="Download" size={16} className="mr-2" />
+                Loader.to
+              </Button>
+            </div>
+
+            <div className="pt-4 border-t">
+              <h4 className="text-sm font-semibold mb-3">Быстрый доступ к сервисам:</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" size="sm" asChild>
+                  <a href="https://ru.savefrom.net/" target="_blank" rel="noopener noreferrer">
+                    <Icon name="Youtube" size={14} className="mr-2" />
+                    YouTube
+                  </a>
+                </Button>
+                <Button variant="outline" size="sm" asChild>
+                  <a href="https://vksaver.pro/" target="_blank" rel="noopener noreferrer">
+                    <Icon name="Video" size={14} className="mr-2" />
+                    VK
+                  </a>
+                </Button>
+                <Button variant="outline" size="sm" asChild>
+                  <a href="https://snaptik.app/ru" target="_blank" rel="noopener noreferrer">
+                    <Icon name="Music" size={14} className="mr-2" />
+                    TikTok
+                  </a>
+                </Button>
+                <Button variant="outline" size="sm" asChild>
+                  <a href="https://rutubdownloader.com/" target="_blank" rel="noopener noreferrer">
+                    <Icon name="Play" size={14} className="mr-2" />
+                    RuTube
+                  </a>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showSearch} onOpenChange={setShowSearch}>
         <DialogContent>
           <DialogHeader>
@@ -655,11 +750,11 @@ const Index = () => {
               <span className="text-xs font-medium">Главная</span>
             </button>
             <button
-              onClick={() => setShowAddPlatform(true)}
+              onClick={() => setShowVideoDownloader(true)}
               className="flex flex-col items-center justify-center py-3 px-2 rounded-lg hover:bg-muted transition-colors"
             >
-              <Icon name="Tv" size={20} className="mb-1" />
-              <span className="text-xs font-medium">Платформы</span>
+              <Icon name="Download" size={20} className="mb-1" />
+              <span className="text-xs font-medium">Скачать</span>
             </button>
             <button
               onClick={() => setShowAddGame(true)}
