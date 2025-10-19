@@ -635,15 +635,21 @@ const Index = () => {
                   </a>
                 </Button>
                 <Button variant="outline" size="sm" asChild>
-                  <a href="https://snaptik.app/ru" target="_blank" rel="noopener noreferrer">
+                  <a href="https://tikvideo.app/ru" target="_blank" rel="noopener noreferrer">
                     <Icon name="Music" size={14} className="mr-2" />
                     TikTok
                   </a>
                 </Button>
                 <Button variant="outline" size="sm" asChild>
-                  <a href="https://rutubdownloader.com/" target="_blank" rel="noopener noreferrer">
+                  <a href="https://video-saver.ru/" target="_blank" rel="noopener noreferrer">
                     <Icon name="Play" size={14} className="mr-2" />
                     RuTube
+                  </a>
+                </Button>
+                <Button variant="outline" size="sm" asChild>
+                  <a href="https://untwitch.com/" target="_blank" rel="noopener noreferrer">
+                    <Icon name="Tv" size={14} className="mr-2" />
+                    Twitch
                   </a>
                 </Button>
               </div>
