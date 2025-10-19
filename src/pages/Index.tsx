@@ -273,82 +273,67 @@ const Index = () => {
   const MainContent = () => (
     <div className={`min-h-screen ${isDarkMode ? 'dark' : ''} ${activeView === 'mobile' ? 'pb-20' : ''}`}>
       <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-blue-800 text-white">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                <span className="text-2xl">🎮</span>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold">StreamHub</h1>
-                <p className="text-sm text-purple-200">Управление стримами и играми</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="flex gap-2">
-                <Button
-                  variant={activeView === 'desktop' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setActiveView('desktop')}
-                  className="text-white hover:bg-white/10"
-                >
-                  <Icon name="Monitor" size={16} />
-                </Button>
-                <Button
-                  variant={activeView === 'mobile' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setActiveView('mobile')}
-                  className="text-white hover:bg-white/10"
-                >
-                  <Icon name="Smartphone" size={16} />
-                </Button>
-              </div>
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-center gap-6">
+            <Button
+              variant={activeView === 'desktop' ? 'secondary' : 'ghost'}
+              size="icon"
+              onClick={() => setActiveView('desktop')}
+              className={`text-white hover:bg-white/20 rounded-2xl w-14 h-14 ${activeView === 'desktop' ? 'bg-cyan-500/30' : ''}`}
+            >
+              <Icon name="Monitor" size={24} />
+            </Button>
+            <Button
+              variant={activeView === 'mobile' ? 'secondary' : 'ghost'}
+              size="icon"
+              onClick={() => setActiveView('mobile')}
+              className={`text-white hover:bg-white/20 rounded-2xl w-14 h-14 ${activeView === 'mobile' ? 'bg-cyan-500/30' : ''}`}
+            >
+              <Icon name="Smartphone" size={24} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowVideoDownloader(true)}
+              className="text-white hover:bg-white/20 rounded-2xl w-14 h-14"
+            >
+              <Icon name="Download" size={24} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowSearch(true)}
+              className="text-white hover:bg-white/20 rounded-2xl w-14 h-14"
+            >
+              <Icon name="Search" size={24} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowWallpaperSettings(true)}
+              className="text-white hover:bg-white/20 rounded-2xl w-14 h-14"
+            >
+              <Icon name="Palette" size={24} />
+            </Button>
+            {isAuthenticated ? (
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setShowVideoDownloader(true)}
-                className="text-white hover:bg-white/10"
+                onClick={() => setShowProfile(true)}
+                className="text-white hover:bg-white/20 rounded-2xl w-14 h-14"
               >
-                <Icon name="Download" size={20} />
+                <Icon name="User" size={24} />
               </Button>
+            ) : (
               <Button
                 variant="ghost"
-                size="icon"
-                onClick={() => setShowSearch(true)}
-                className="text-white hover:bg-white/10"
+                onClick={() => setShowAuth(true)}
+                className="text-white hover:bg-white/20 rounded-2xl h-14 px-6"
               >
-                <Icon name="Search" size={20} />
+                <Icon name="LogIn" size={20} className="mr-2" />
+                Войти
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowWallpaperSettings(true)}
-                className="text-white hover:bg-white/10"
-              >
-                <Icon name="Palette" size={20} />
-              </Button>
-              {isAuthenticated ? (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowProfile(true)}
-                  className="text-white hover:bg-white/10"
-                >
-                  <Icon name="User" size={20} />
-                </Button>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowAuth(true)}
-                  className="text-white hover:bg-white/10"
-                >
-                  <Icon name="LogIn" size={16} className="mr-2" />
-                  Войти
-                </Button>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </div>
