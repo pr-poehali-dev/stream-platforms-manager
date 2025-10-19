@@ -38,6 +38,9 @@ const Index = () => {
   const [videoUrl, setVideoUrl] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [activeView, setActiveView] = useState<'desktop' | 'mobile'>('desktop');
+  const [showWallpaperSettings, setShowWallpaperSettings] = useState(false);
+  const [wallpaperTheme, setWallpaperTheme] = useState<'light' | 'dark' | 'custom'>('light');
+  const [customWallpaper, setCustomWallpaper] = useState('');
   const { toast } = useToast();
 
   const [platforms, setPlatforms] = useState<Platform[]>([
@@ -316,6 +319,14 @@ const Index = () => {
                 className="text-white hover:bg-white/10"
               >
                 <Icon name="Search" size={20} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowWallpaperSettings(true)}
+                className="text-white hover:bg-white/10"
+              >
+                <Icon name="Palette" size={20} />
               </Button>
               {isAuthenticated ? (
                 <Button
@@ -698,6 +709,157 @@ const Index = () => {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showWallpaperSettings} onOpenChange={setShowWallpaperSettings}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Настройка фона сайта</DialogTitle>
+          </DialogHeader>
+          <Tabs defaultValue="themes" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="themes">Темы</TabsTrigger>
+              <TabsTrigger value="custom">Свой фон</TabsTrigger>
+              <TabsTrigger value="gallery">Галерея</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="themes" className="space-y-4 mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Card 
+                  className={`p-6 cursor-pointer transition-all hover:scale-105 ${wallpaperTheme === 'light' ? 'ring-2 ring-primary' : ''}`}
+                  onClick={() => {
+                    setWallpaperTheme('light');
+                    document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    toast({ title: 'Светлая тема применена', description: 'Градиент фиолетово-синий' });
+                  }}
+                >
+                  <div className="w-full h-32 rounded-lg bg-gradient-to-br from-purple-400 to-blue-500 mb-3"></div>
+                  <h3 className="font-semibold">Светлая тема</h3>
+                  <p className="text-sm text-muted-foreground">Классический градиент</p>
+                </Card>
+
+                <Card 
+                  className={`p-6 cursor-pointer transition-all hover:scale-105 ${wallpaperTheme === 'dark' ? 'ring-2 ring-primary' : ''}`}
+                  onClick={() => {
+                    setWallpaperTheme('dark');
+                    document.body.style.background = 'linear-gradient(135deg, #1e3a8a 0%, #1e293b 100%)';
+                    toast({ title: 'Темная тема применена', description: 'Глубокий синий градиент' });
+                  }}
+                >
+                  <div className="w-full h-32 rounded-lg bg-gradient-to-br from-blue-900 to-slate-900 mb-3"></div>
+                  <h3 className="font-semibold">Темная тема</h3>
+                  <p className="text-sm text-muted-foreground">Ночной режим</p>
+                </Card>
+
+                <Card 
+                  className="p-6 cursor-pointer transition-all hover:scale-105"
+                  onClick={() => {
+                    document.body.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+                    toast({ title: 'Тема применена', description: 'Розовый закат' });
+                  }}
+                >
+                  <div className="w-full h-32 rounded-lg bg-gradient-to-br from-pink-400 to-red-500 mb-3"></div>
+                  <h3 className="font-semibold">Розовый закат</h3>
+                  <p className="text-sm text-muted-foreground">Теплые оттенки</p>
+                </Card>
+
+                <Card 
+                  className="p-6 cursor-pointer transition-all hover:scale-105"
+                  onClick={() => {
+                    document.body.style.background = 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)';
+                    toast({ title: 'Тема применена', description: 'Зеленая свежесть' });
+                  }}
+                >
+                  <div className="w-full h-32 rounded-lg bg-gradient-to-br from-green-400 to-cyan-400 mb-3"></div>
+                  <h3 className="font-semibold">Зеленая свежесть</h3>
+                  <p className="text-sm text-muted-foreground">Природные тона</p>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="custom" className="space-y-4 mt-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Вставьте URL изображения</Label>
+                  <Input
+                    placeholder="https://example.com/image.jpg"
+                    value={customWallpaper}
+                    onChange={(e) => setCustomWallpaper(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Поддерживаются форматы: JPG, PNG, WebP, GIF
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Или загрузите файл</Label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const imageUrl = event.target?.result as string;
+                          setCustomWallpaper(imageUrl);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                </div>
+
+                {customWallpaper && (
+                  <div className="space-y-3">
+                    <Label>Предпросмотр:</Label>
+                    <div 
+                      className="w-full h-48 rounded-lg bg-cover bg-center border"
+                      style={{ backgroundImage: `url(${customWallpaper})` }}
+                    ></div>
+                    <Button
+                      className="w-full"
+                      onClick={() => {
+                        setWallpaperTheme('custom');
+                        document.body.style.background = `url(${customWallpaper}) center/cover fixed`;
+                        toast({ title: 'Пользовательский фон применен', description: 'Ваше изображение установлено' });
+                      }}
+                    >
+                      <Icon name="Check" size={16} className="mr-2" />
+                      Применить фон
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="gallery" className="space-y-4 mt-4">
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800',
+                  'https://images.unsplash.com/photo-1557683316-973673baf926?w=800',
+                  'https://images.unsplash.com/photo-1614850523060-8da1d56ae167?w=800',
+                  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800',
+                  'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=800',
+                  'https://images.unsplash.com/photo-1620121692029-d088224ddc74?w=800',
+                  'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=800',
+                  'https://images.unsplash.com/photo-1553356084-58ef4a67b2a7?w=800',
+                  'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800'
+                ].map((url, index) => (
+                  <div
+                    key={index}
+                    className="aspect-video rounded-lg bg-cover bg-center cursor-pointer hover:scale-105 transition-all border-2 hover:border-primary"
+                    style={{ backgroundImage: `url(${url})` }}
+                    onClick={() => {
+                      document.body.style.background = `url(${url}) center/cover fixed`;
+                      toast({ title: 'Фон применен', description: `Изображение ${index + 1} установлено` });
+                    }}
+                  ></div>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
 
