@@ -7,6 +7,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 
@@ -278,7 +284,8 @@ const Index = () => {
     <div className={`min-h-screen ${isDarkMode ? 'dark' : ''} ${activeView === 'mobile' ? 'pb-20' : ''}`}>
       <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-blue-800 text-white">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-center gap-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
             <Button
               variant={activeView === 'desktop' ? 'secondary' : 'ghost'}
               size="icon"
@@ -319,25 +326,65 @@ const Index = () => {
             >
               <Icon name="Palette" size={24} />
             </Button>
-            {isAuthenticated ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowProfile(true)}
-                className="text-white hover:bg-white/20 rounded-2xl w-14 h-14"
-              >
-                <Icon name="User" size={24} />
-              </Button>
-            ) : (
-              <Button
-                variant="ghost"
-                onClick={() => setShowAuth(true)}
-                className="text-white hover:bg-white/20 rounded-2xl h-14 px-6"
-              >
-                <Icon name="LogIn" size={20} className="mr-2" />
-                Войти
-              </Button>
-            )}
+            </div>
+
+            <div className="flex items-center gap-4">
+              {isAuthenticated ? (
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowProfile(true)}
+                  className="text-white hover:bg-white/20 rounded-2xl h-12 px-6"
+                >
+                  <Icon name="LogIn" size={20} className="mr-2" />
+                  Войти
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowAuth(true)}
+                  className="text-white hover:bg-white/20 rounded-2xl h-12 px-6"
+                >
+                  <Icon name="LogIn" size={20} className="mr-2" />
+                  Войти
+                </Button>
+              )}
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-white/20 rounded-2xl w-14 h-14"
+                  >
+                    <Icon name="MoreVertical" size={24} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {isAuthenticated && (
+                    <DropdownMenuItem onClick={() => setShowProfile(true)}>
+                      <Icon name="User" size={16} className="mr-2" />
+                      Профиль
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={() => setShowVideoDownloader(true)}>
+                    <Icon name="Download" size={16} className="mr-2" />
+                    Загрузки видео
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowWallpaperSettings(true)}>
+                    <Icon name="Palette" size={16} className="mr-2" />
+                    Выбор тем
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowAddPlatform(true)}>
+                    <Icon name="Plus" size={16} className="mr-2" />
+                    Добавить
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Icon name="Settings" size={16} className="mr-2" />
+                    Режим для телефона или ПК
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </div>
