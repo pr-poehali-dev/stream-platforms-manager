@@ -412,23 +412,36 @@ const Index = () => {
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 animate-fade-in">
             {streamingPlatforms.map((platform) => (
-              <a 
-                key={platform.id} 
-                href={platform.url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="group"
-              >
-                <Card className="overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer border-0">
-                  <div className="p-4 flex flex-col items-center text-center">
-                    <div className={`w-16 h-16 bg-gradient-to-br ${platform.gradient} rounded-2xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
-                      <span className="text-3xl">{platform.icon}</span>
+              <div key={platform.id} className="group relative">
+                <a 
+                  href={platform.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  <Card className="overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer border-0">
+                    <div className="p-4 flex flex-col items-center text-center">
+                      <div className={`w-16 h-16 bg-gradient-to-br ${platform.gradient} rounded-2xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
+                        <span className="text-3xl">{platform.icon}</span>
+                      </div>
+                      <h3 className="font-semibold text-sm mb-1 line-clamp-1">{platform.name}</h3>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{platform.description}</p>
                     </div>
-                    <h3 className="font-semibold text-sm mb-1 line-clamp-1">{platform.name}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{platform.description}</p>
-                  </div>
-                </Card>
-              </a>
+                  </Card>
+                </a>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="absolute -top-2 -right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setPlatforms(platforms.filter(p => p.id !== platform.id));
+                    toast({ title: 'Платформа удалена', description: `${platform.name} удалена из списка` });
+                  }}
+                >
+                  <Icon name="X" size={14} />
+                </Button>
+              </div>
             ))}
           </div>
         </div>
@@ -449,15 +462,28 @@ const Index = () => {
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 animate-fade-in">
             {games.map((game) => (
-              <Card key={game.id} className="overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer border-0 group">
-                <div className="p-4 flex flex-col items-center text-center">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                    <span className="text-3xl">🎮</span>
+              <div key={game.id} className="group relative">
+                <Card className="overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer border-0">
+                  <div className="p-4 flex flex-col items-center text-center">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                      <span className="text-3xl">🎮</span>
+                    </div>
+                    <h3 className="font-semibold text-sm mb-1 line-clamp-1">{game.name}</h3>
+                    <p className="text-xs text-muted-foreground">{game.platform}</p>
                   </div>
-                  <h3 className="font-semibold text-sm mb-1 line-clamp-1">{game.name}</h3>
-                  <p className="text-xs text-muted-foreground">{game.platform}</p>
-                </div>
-              </Card>
+                </Card>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="absolute -top-2 -right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                  onClick={() => {
+                    setGames(games.filter(g => g.id !== game.id));
+                    toast({ title: 'Игра удалена', description: `${game.name} удалена из списка` });
+                  }}
+                >
+                  <Icon name="X" size={14} />
+                </Button>
+              </div>
             ))}
           </div>
         </div>
@@ -474,23 +500,36 @@ const Index = () => {
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 animate-fade-in">
             {userPlatforms.map((platform) => (
-              <a 
-                key={platform.id} 
-                href={platform.url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="group"
-              >
-                <Card className="overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer border-0">
-                  <div className="p-4 flex flex-col items-center text-center">
-                    <div className={`w-16 h-16 bg-gradient-to-br ${platform.gradient} rounded-2xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
-                      <span className="text-3xl">{platform.icon}</span>
+              <div key={platform.id} className="group relative">
+                <a 
+                  href={platform.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  <Card className="overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer border-0">
+                    <div className="p-4 flex flex-col items-center text-center">
+                      <div className={`w-16 h-16 bg-gradient-to-br ${platform.gradient} rounded-2xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
+                        <span className="text-3xl">{platform.icon}</span>
+                      </div>
+                      <h3 className="font-semibold text-sm mb-1 line-clamp-1">{platform.name}</h3>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{platform.description}</p>
                     </div>
-                    <h3 className="font-semibold text-sm mb-1 line-clamp-1">{platform.name}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{platform.description}</p>
-                  </div>
-                </Card>
-              </a>
+                  </Card>
+                </a>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="absolute -top-2 -right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setPlatforms(platforms.filter(p => p.id !== platform.id));
+                    toast({ title: 'Платформа удалена', description: `${platform.name} удалена из списка` });
+                  }}
+                >
+                  <Icon name="X" size={14} />
+                </Button>
+              </div>
             ))}
           </div>
         </div>
