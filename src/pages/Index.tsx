@@ -290,30 +290,6 @@ const Index = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
             <Button
-              variant={activeView === 'desktop' ? 'secondary' : 'ghost'}
-              size="icon"
-              onClick={() => setActiveView('desktop')}
-              className={`text-white hover:bg-white/20 rounded-2xl w-12 h-12 ${activeView === 'desktop' ? 'bg-cyan-500/30' : ''}`}
-            >
-              <Icon name="Monitor" size={20} />
-            </Button>
-            <Button
-              variant={activeView === 'mobile' ? 'secondary' : 'ghost'}
-              size="icon"
-              onClick={() => setActiveView('mobile')}
-              className={`text-white hover:bg-white/20 rounded-2xl w-12 h-12 ${activeView === 'mobile' ? 'bg-cyan-500/30' : ''}`}
-            >
-              <Icon name="Smartphone" size={20} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowVideoDownloader(true)}
-              className="text-white hover:bg-white/20 rounded-2xl w-12 h-12"
-            >
-              <Icon name="Download" size={20} />
-            </Button>
-            <Button
               variant="ghost"
               size="icon"
               onClick={() => setShowSearch(true)}
@@ -324,10 +300,10 @@ const Index = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setShowWallpaperSettings(true)}
+              onClick={() => window.open('https://www.google.com', '_blank')}
               className="text-white hover:bg-white/20 rounded-2xl w-12 h-12"
             >
-              <Icon name="Palette" size={20} />
+              <Icon name="Globe" size={20} />
             </Button>
             </div>
 
