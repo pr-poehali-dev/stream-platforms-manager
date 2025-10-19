@@ -354,45 +354,59 @@ const Index = () => {
       </div>
 
       <div className={`container mx-auto px-4 py-8 ${activeView === 'mobile' ? 'max-w-md' : ''}`}>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-fade-in">
+        <div className="mb-8 animate-fade-in">
           <Card className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-muted-foreground">Стриминговые платформы</h3>
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">📺</span>
-              </div>
-            </div>
-            <p className="text-3xl font-bold">{streamingPlatforms.length}</p>
-          </Card>
+            <div className="flex items-center justify-center gap-8 flex-wrap">
+              <button
+                onClick={() => setShowAddPlatform(true)}
+                className="flex flex-col items-center gap-2 hover:scale-105 transition-transform"
+              >
+                <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center border-2 border-dashed border-gray-300 hover:border-primary">
+                  <Icon name="Grid3x3" size={24} className="text-gray-400" />
+                </div>
+                <span className="text-sm font-medium text-gray-700">Сервисы</span>
+              </button>
 
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-muted-foreground">Всего игр</h3>
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">🎮</span>
-              </div>
-            </div>
-            <p className="text-3xl font-bold">{games.length}</p>
-          </Card>
+              <button
+                onClick={() => setShowAddGame(true)}
+                className="flex flex-col items-center gap-2 hover:scale-105 transition-transform"
+              >
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-md">
+                  <span className="text-3xl">🎮</span>
+                </div>
+                <span className="text-sm font-medium text-gray-700">Игры</span>
+              </button>
 
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-muted-foreground">Пользовательские игры</h3>
-              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">🏆</span>
-              </div>
-            </div>
-            <p className="text-3xl font-bold">0</p>
-          </Card>
+              <button
+                onClick={() => setShowSearch(true)}
+                className="flex flex-col items-center gap-2 hover:scale-105 transition-transform"
+              >
+                <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-md">
+                  <Icon name="MapPin" size={32} className="text-white" />
+                </div>
+                <span className="text-sm font-medium text-gray-700">Карты</span>
+              </button>
 
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-muted-foreground">Пользовательские платформы</h3>
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-700 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">🏆</span>
-              </div>
+              <button
+                onClick={() => setShowVideoDownloader(true)}
+                className="flex flex-col items-center gap-2 hover:scale-105 transition-transform"
+              >
+                <div className="w-16 h-16 bg-gradient-to-br from-red-600 to-orange-600 rounded-2xl flex items-center justify-center shadow-md">
+                  <Icon name="Languages" size={32} className="text-white" />
+                </div>
+                <span className="text-sm font-medium text-gray-700">Переводчик</span>
+              </button>
+
+              <button
+                onClick={() => setShowAddPlatform(true)}
+                className="flex flex-col items-center gap-2 hover:scale-105 transition-transform"
+              >
+                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center border-2 border-gray-200 shadow-sm">
+                  <Icon name="Plus" size={32} className="text-gray-400" />
+                </div>
+                <span className="text-sm font-medium text-gray-700">Добавить</span>
+              </button>
             </div>
-            <p className="text-3xl font-bold">0</p>
           </Card>
         </div>
 
