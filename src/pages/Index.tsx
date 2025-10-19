@@ -582,77 +582,33 @@ const Index = () => {
                 onChange={(e) => setVideoUrl(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Поддерживается: YouTube, ВКонтакте, TikTok, RuTube, Instagram, Facebook
+                Поддерживается: YouTube, ВКонтакте, TikTok, RuTube, Instagram, Facebook, Twitch и другие
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  if (videoUrl) {
-                    window.open(`https://savefrom.net/?url=${encodeURIComponent(videoUrl)}`, '_blank');
-                    toast({ title: 'Открываем загрузчик', description: 'Сервис SaveFrom.net' });
-                  } else {
-                    toast({ title: 'Введите ссылку', description: 'Вставьте URL видео', variant: 'destructive' });
-                  }
-                }}
-              >
-                <Icon name="Download" size={16} className="mr-2" />
-                SaveFrom.net
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  if (videoUrl) {
-                    window.open(`https://loader.to/ru/youtube-downloader/?url=${encodeURIComponent(videoUrl)}`, '_blank');
-                    toast({ title: 'Открываем загрузчик', description: 'Сервис Loader.to' });
-                  } else {
-                    toast({ title: 'Введите ссылку', description: 'Вставьте URL видео', variant: 'destructive' });
-                  }
-                }}
-              >
-                <Icon name="Download" size={16} className="mr-2" />
-                Loader.to
-              </Button>
-            </div>
+            <Button
+              className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
+              onClick={() => {
+                if (videoUrl) {
+                  window.open(`https://ru.get-save.com/1-1/?url=${encodeURIComponent(videoUrl)}`, '_blank');
+                  toast({ title: 'Открываем загрузчик', description: 'Универсальный сервис Get-Save.com' });
+                } else {
+                  toast({ title: 'Введите ссылку', description: 'Вставьте URL видео', variant: 'destructive' });
+                }
+              }}
+            >
+              <Icon name="Download" size={16} className="mr-2" />
+              Скачать видео
+            </Button>
 
             <div className="pt-4 border-t">
-              <h4 className="text-sm font-semibold mb-3">Быстрый доступ к сервисам:</h4>
-              <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" size="sm" asChild>
-                  <a href="https://ru.savefrom.net/" target="_blank" rel="noopener noreferrer">
-                    <Icon name="Youtube" size={14} className="mr-2" />
-                    YouTube
-                  </a>
-                </Button>
-                <Button variant="outline" size="sm" asChild>
-                  <a href="https://vksaver.pro/" target="_blank" rel="noopener noreferrer">
-                    <Icon name="Video" size={14} className="mr-2" />
-                    VK
-                  </a>
-                </Button>
-                <Button variant="outline" size="sm" asChild>
-                  <a href="https://tikvideo.app/ru" target="_blank" rel="noopener noreferrer">
-                    <Icon name="Music" size={14} className="mr-2" />
-                    TikTok
-                  </a>
-                </Button>
-                <Button variant="outline" size="sm" asChild>
-                  <a href="https://video-saver.ru/" target="_blank" rel="noopener noreferrer">
-                    <Icon name="Play" size={14} className="mr-2" />
-                    RuTube
-                  </a>
-                </Button>
-                <Button variant="outline" size="sm" asChild>
-                  <a href="https://untwitch.com/" target="_blank" rel="noopener noreferrer">
-                    <Icon name="Tv" size={14} className="mr-2" />
-                    Twitch
-                  </a>
-                </Button>
-              </div>
+              <h4 className="text-sm font-semibold mb-3">Или откройте напрямую:</h4>
+              <Button variant="outline" className="w-full" asChild>
+                <a href="https://ru.get-save.com/1-1/" target="_blank" rel="noopener noreferrer">
+                  <Icon name="ExternalLink" size={16} className="mr-2" />
+                  Get-Save.com - Универсальный загрузчик
+                </a>
+              </Button>
             </div>
           </div>
         </DialogContent>
