@@ -590,6 +590,16 @@ const Index = () => {
               <Input type="email" placeholder="Новый email" />
             </div>
 
+            <Button 
+              className="w-full"
+              onClick={() => {
+                toast({ title: 'Данные сохранены!', description: 'Ваши изменения успешно применены' });
+              }}
+            >
+              <Icon name="Save" size={16} className="mr-2" />
+              Сохранить данные
+            </Button>
+
             <div className="pt-4 border-t">
               <Button
                 variant="destructive"
