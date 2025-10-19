@@ -285,46 +285,46 @@ const Index = () => {
       <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-blue-800 text-white">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4">
             <Button
               variant={activeView === 'desktop' ? 'secondary' : 'ghost'}
               size="icon"
               onClick={() => setActiveView('desktop')}
-              className={`text-white hover:bg-white/20 rounded-2xl w-14 h-14 ${activeView === 'desktop' ? 'bg-cyan-500/30' : ''}`}
+              className={`text-white hover:bg-white/20 rounded-2xl w-12 h-12 ${activeView === 'desktop' ? 'bg-cyan-500/30' : ''}`}
             >
-              <Icon name="Monitor" size={24} />
+              <Icon name="Monitor" size={20} />
             </Button>
             <Button
               variant={activeView === 'mobile' ? 'secondary' : 'ghost'}
               size="icon"
               onClick={() => setActiveView('mobile')}
-              className={`text-white hover:bg-white/20 rounded-2xl w-14 h-14 ${activeView === 'mobile' ? 'bg-cyan-500/30' : ''}`}
+              className={`text-white hover:bg-white/20 rounded-2xl w-12 h-12 ${activeView === 'mobile' ? 'bg-cyan-500/30' : ''}`}
             >
-              <Icon name="Smartphone" size={24} />
+              <Icon name="Smartphone" size={20} />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setShowVideoDownloader(true)}
-              className="text-white hover:bg-white/20 rounded-2xl w-14 h-14"
+              className="text-white hover:bg-white/20 rounded-2xl w-12 h-12"
             >
-              <Icon name="Download" size={24} />
+              <Icon name="Download" size={20} />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setShowSearch(true)}
-              className="text-white hover:bg-white/20 rounded-2xl w-14 h-14"
+              className="text-white hover:bg-white/20 rounded-2xl w-12 h-12"
             >
-              <Icon name="Search" size={24} />
+              <Icon name="Search" size={20} />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setShowWallpaperSettings(true)}
-              className="text-white hover:bg-white/20 rounded-2xl w-14 h-14"
+              className="text-white hover:bg-white/20 rounded-2xl w-12 h-12"
             >
-              <Icon name="Palette" size={24} />
+              <Icon name="Palette" size={20} />
             </Button>
             </div>
 
