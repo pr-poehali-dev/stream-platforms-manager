@@ -335,11 +335,11 @@ const Index = () => {
               {isAuthenticated ? (
                 <Button
                   variant="ghost"
+                  size="icon"
                   onClick={() => setShowProfile(true)}
-                  className="text-white hover:bg-white/20 rounded-2xl h-12 px-6"
+                  className="text-white hover:bg-white/20 rounded-full w-12 h-12"
                 >
-                  <Icon name="LogIn" size={20} className="mr-2" />
-                  Войти
+                  <Icon name="User" size={24} />
                 </Button>
               ) : (
                 <Button
