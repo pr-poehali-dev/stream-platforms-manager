@@ -208,7 +208,15 @@ const Index = () => {
   if (!isAuthenticated && showAuth) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-blue-800 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md p-8 animate-scale-in">
+        <Card className="w-full max-w-md p-8 animate-scale-in relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowAuth(false)}
+            className="absolute top-4 right-4 hover:bg-white/20"
+          >
+            <Icon name="X" size={20} />
+          </Button>
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl mb-4">
               <span className="text-3xl">🎮</span>
@@ -290,14 +298,6 @@ const Index = () => {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowSearch(true)}
-              className="text-white hover:bg-white/20 rounded-2xl w-12 h-12"
-            >
-              <Icon name="Search" size={20} />
-            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
