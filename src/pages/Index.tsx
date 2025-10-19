@@ -259,7 +259,7 @@ const Index = () => {
   }
 
   const MainContent = () => (
-    <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+    <div className={`min-h-screen ${isDarkMode ? 'dark' : ''} ${activeView === 'mobile' ? 'pb-20' : ''}`}>
       <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-blue-800 text-white">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
@@ -616,6 +616,41 @@ const Index = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {activeView === 'mobile' && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border shadow-lg z-50">
+          <div className="grid grid-cols-4 gap-1 p-2">
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="flex flex-col items-center justify-center py-3 px-2 rounded-lg hover:bg-muted transition-colors"
+            >
+              <Icon name="Home" size={20} className="mb-1" />
+              <span className="text-xs font-medium">Главная</span>
+            </button>
+            <button
+              onClick={() => setShowAddPlatform(true)}
+              className="flex flex-col items-center justify-center py-3 px-2 rounded-lg hover:bg-muted transition-colors"
+            >
+              <Icon name="Tv" size={20} className="mb-1" />
+              <span className="text-xs font-medium">Платформы</span>
+            </button>
+            <button
+              onClick={() => setShowAddGame(true)}
+              className="flex flex-col items-center justify-center py-3 px-2 rounded-lg hover:bg-muted transition-colors"
+            >
+              <Icon name="Gamepad2" size={20} className="mb-1" />
+              <span className="text-xs font-medium">Игры</span>
+            </button>
+            <button
+              onClick={() => setShowProfile(true)}
+              className="flex flex-col items-center justify-center py-3 px-2 rounded-lg hover:bg-muted transition-colors"
+            >
+              <Icon name="User" size={20} className="mb-1" />
+              <span className="text-xs font-medium">Профиль</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 
