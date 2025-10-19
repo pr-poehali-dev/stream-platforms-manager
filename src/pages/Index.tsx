@@ -27,8 +27,8 @@ interface Game {
 }
 
 const Index = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [currentUser, setCurrentUser] = useState<{ email: string; theme: string } | null>({ email: 'user@streamhub.app', theme: 'system' });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{ email: string; theme: string } | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showAddPlatform, setShowAddPlatform] = useState(false);
@@ -176,6 +176,13 @@ const Index = () => {
     toast({ title: 'Аккаунт удален', description: 'Ваш аккаунт был успешно удален' });
   };
 
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setShowProfile(false);
+    toast({ title: 'Вы вышли из аккаунта', description: 'До скорой встречи!' });
+  };
+
   const streamingPlatforms = platforms.filter(p => p.type === 'streaming');
   const userPlatforms = platforms.filter(p => p.type !== 'streaming');
 
@@ -300,14 +307,26 @@ const Index = () => {
               >
                 <Icon name="Search" size={20} />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowProfile(true)}
-                className="text-white hover:bg-white/10"
-              >
-                <Icon name="User" size={20} />
-              </Button>
+              {isAuthenticated ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowProfile(true)}
+                  className="text-white hover:bg-white/10"
+                >
+                  <Icon name="User" size={20} />
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAuth(true)}
+                  className="text-white hover:bg-white/10"
+                >
+                  <Icon name="LogIn" size={16} className="mr-2" />
+                  Войти
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -603,7 +622,15 @@ const Index = () => {
               Сохранить данные
             </Button>
 
-            <div className="pt-4 border-t">
+            <div className="pt-4 border-t space-y-2">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleLogout}
+              >
+                <Icon name="LogOut" size={16} className="mr-2" />
+                Выйти из аккаунта
+              </Button>
               <Button
                 variant="destructive"
                 className="w-full"
@@ -641,13 +668,23 @@ const Index = () => {
               <Icon name="Gamepad2" size={20} className="mb-1" />
               <span className="text-xs font-medium">Игры</span>
             </button>
-            <button
-              onClick={() => setShowProfile(true)}
-              className="flex flex-col items-center justify-center py-3 px-2 rounded-lg hover:bg-muted transition-colors"
-            >
-              <Icon name="User" size={20} className="mb-1" />
-              <span className="text-xs font-medium">Профиль</span>
-            </button>
+            {isAuthenticated ? (
+              <button
+                onClick={() => setShowProfile(true)}
+                className="flex flex-col items-center justify-center py-3 px-2 rounded-lg hover:bg-muted transition-colors"
+              >
+                <Icon name="User" size={20} className="mb-1" />
+                <span className="text-xs font-medium">Профиль</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowAuth(true)}
+                className="flex flex-col items-center justify-center py-3 px-2 rounded-lg hover:bg-muted transition-colors"
+              >
+                <Icon name="LogIn" size={20} className="mb-1" />
+                <span className="text-xs font-medium">Войти</span>
+              </button>
+            )}
           </div>
         </div>
       )}
