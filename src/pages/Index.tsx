@@ -24,6 +24,7 @@ interface Game {
   id: string;
   name: string;
   platform: string;
+  url?: string;
 }
 
 const Index = () => {
@@ -110,15 +111,17 @@ const Index = () => {
   ]);
 
   const [games, setGames] = useState<Game[]>([
-    { id: '1', name: 'Dota 2', platform: 'Steam' },
-    { id: '2', name: 'CS:GO', platform: 'Steam' },
-    { id: '3', name: 'Valorant', platform: 'PC' },
-    { id: '4', name: 'League of Legends', platform: 'PC' }
+    { id: '1', name: 'Dota 2', platform: 'Steam', url: 'https://store.steampowered.com/app/570/Dota_2/' },
+    { id: '2', name: 'CS:GO', platform: 'Steam', url: 'https://store.steampowered.com/app/730/CounterStrike_2/' },
+    { id: '3', name: 'Valorant', platform: 'Riot', url: 'https://playvalorant.com/ru-ru/' },
+    { id: '4', name: 'League of Legends', platform: 'Riot', url: 'https://www.leagueoflegends.com/ru-ru/' },
+    { id: '5', name: 'Fortnite', platform: 'Epic', url: 'https://www.fortnite.com/' },
+    { id: '6', name: 'Minecraft', platform: 'Mojang', url: 'https://www.minecraft.net/' }
   ]);
 
   const [authForm, setAuthForm] = useState({ email: '', password: '' });
   const [newPlatform, setNewPlatform] = useState({ name: '', description: '', type: 'streaming' as const, url: '' });
-  const [newGame, setNewGame] = useState({ name: '', platform: '' });
+  const [newGame, setNewGame] = useState({ name: '', platform: '', url: '' });
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -166,10 +169,11 @@ const Index = () => {
     const game: Game = {
       id: Date.now().toString(),
       name: newGame.name,
-      platform: newGame.platform
+      platform: newGame.platform,
+      url: newGame.url
     };
     setGames([...games, game]);
-    setNewGame({ name: '', platform: '' });
+    setNewGame({ name: '', platform: '', url: '' });
     setShowAddGame(false);
     toast({ title: 'Игра добавлена!', description: `${game.name} успешно добавлена` });
   };
@@ -406,20 +410,28 @@ const Index = () => {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 animate-fade-in">
             {games.map((game) => (
               <div key={game.id} className="group relative">
-                <Card className="overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer border-0">
-                  <div className="p-4 flex flex-col items-center text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                      <span className="text-3xl">🎮</span>
+                <a
+                  href={game.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  <Card className="overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer border-0">
+                    <div className="p-4 flex flex-col items-center text-center">
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                        <span className="text-3xl">🎮</span>
+                      </div>
+                      <h3 className="font-semibold text-sm mb-1 line-clamp-1">{game.name}</h3>
+                      <p className="text-xs text-muted-foreground">{game.platform}</p>
                     </div>
-                    <h3 className="font-semibold text-sm mb-1 line-clamp-1">{game.name}</h3>
-                    <p className="text-xs text-muted-foreground">{game.platform}</p>
-                  </div>
-                </Card>
+                  </Card>
+                </a>
                 <Button
                   variant="destructive"
                   size="icon"
                   className="absolute -top-2 -right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
                     setGames(games.filter(g => g.id !== game.id));
                     toast({ title: 'Игра удалена', description: `${game.name} удалена из списка` });
                   }}
@@ -553,6 +565,15 @@ const Index = () => {
                 placeholder="Steam, PC, PlayStation и т.д."
                 value={newGame.platform}
                 onChange={(e) => setNewGame({ ...newGame, platform: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="game-url">Ссылка на игру</Label>
+              <Input
+                id="game-url"
+                placeholder="https://..."
+                value={newGame.url}
+                onChange={(e) => setNewGame({ ...newGame, url: e.target.value })}
               />
             </div>
             <Button onClick={handleAddGame} className="w-full">Добавить</Button>
