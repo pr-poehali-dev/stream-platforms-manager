@@ -27,9 +27,9 @@ interface Game {
 }
 
 const Index = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{ email: string; theme: string } | null>(null);
-  const [showAuth, setShowAuth] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [currentUser, setCurrentUser] = useState<{ email: string; theme: string } | null>({ email: 'user@streamhub.app', theme: 'system' });
+  const [showAuth, setShowAuth] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showAddPlatform, setShowAddPlatform] = useState(false);
   const [showAddGame, setShowAddGame] = useState(false);
