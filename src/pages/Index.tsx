@@ -12,6 +12,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
@@ -378,10 +381,22 @@ const Index = () => {
                     <Icon name="Plus" size={16} className="mr-2" />
                     Добавить
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Icon name="Settings" size={16} className="mr-2" />
-                    Режим для телефона или ПК
-                  </DropdownMenuItem>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <Icon name="Settings" size={16} className="mr-2" />
+                      Режим для телефона или ПК
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem onClick={() => setActiveView('desktop')}>
+                        <Icon name="Monitor" size={16} className="mr-2" />
+                        ПК
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setActiveView('mobile')}>
+                        <Icon name="Smartphone" size={16} className="mr-2" />
+                        Телефон
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
