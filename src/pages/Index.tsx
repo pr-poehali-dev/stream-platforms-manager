@@ -41,6 +41,7 @@ const Index = () => {
   const [showWallpaperSettings, setShowWallpaperSettings] = useState(false);
   const [wallpaperTheme, setWallpaperTheme] = useState<'light' | 'dark' | 'custom'>('light');
   const [customWallpaper, setCustomWallpaper] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
 
   const [platforms, setPlatforms] = useState<Platform[]>([
@@ -270,40 +271,25 @@ const Index = () => {
     );
   }
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      window.open(`https://yandex.ru/search/?text=${encodeURIComponent(searchQuery)}`, '_blank');
+    }
+  };
+
   const MainContent = () => (
     <div className={`min-h-screen ${isDarkMode ? 'dark' : ''} ${activeView === 'mobile' ? 'pb-20' : ''}`}>
       <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-blue-800 text-white">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                <span className="text-2xl">🎮</span>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold">StreamHub</h1>
-                <p className="text-sm text-purple-200">Управление стримами и играми</p>
+              <div className="w-14 h-14 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center shadow-lg">
+                <span className="text-2xl font-bold text-white">Я</span>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="flex gap-2">
-                <Button
-                  variant={activeView === 'desktop' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setActiveView('desktop')}
-                  className="text-white hover:bg-white/10"
-                >
-                  <Icon name="Monitor" size={16} />
-                </Button>
-                <Button
-                  variant={activeView === 'mobile' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setActiveView('mobile')}
-                  className="text-white hover:bg-white/10"
-                >
-                  <Icon name="Smartphone" size={16} />
-                </Button>
-              </div>
               <Button
                 variant="ghost"
                 size="icon"
@@ -311,14 +297,6 @@ const Index = () => {
                 className="text-white hover:bg-white/10"
               >
                 <Icon name="Download" size={20} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowSearch(true)}
-                className="text-white hover:bg-white/10"
-              >
-                <Icon name="Search" size={20} />
               </Button>
               <Button
                 variant="ghost"
@@ -349,6 +327,38 @@ const Index = () => {
                 </Button>
               )}
             </div>
+          </div>
+
+          <div className="max-w-3xl mx-auto">
+            <form onSubmit={handleSearch} className="relative">
+              <div className="relative flex items-center bg-white rounded-full shadow-lg overflow-hidden">
+                <Input
+                  type="text"
+                  placeholder="Найдётся всё"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="border-0 focus-visible:ring-0 h-14 pl-6 pr-24 text-lg text-gray-700 placeholder:text-gray-400 rounded-full"
+                />
+                <div className="absolute right-3 flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="text-gray-400 hover:text-gray-600 hover:bg-transparent"
+                  >
+                    <Icon name="Mic" size={20} />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="text-gray-400 hover:text-gray-600 hover:bg-transparent"
+                  >
+                    <Icon name="Camera" size={20} />
+                  </Button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       </div>
