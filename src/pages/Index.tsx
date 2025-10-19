@@ -370,26 +370,25 @@ const Index = () => {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 animate-fade-in">
             {streamingPlatforms.map((platform) => (
-              <Card key={platform.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                <div className={`h-32 bg-gradient-to-br ${platform.gradient} flex items-center justify-center`}>
-                  <span className="text-6xl">{platform.icon}</span>
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-xl font-bold">{platform.name}</h3>
-                    <Badge variant="secondary">Стриминг</Badge>
+              <a 
+                key={platform.id} 
+                href={platform.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="group"
+              >
+                <Card className="overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer border-0">
+                  <div className="p-4 flex flex-col items-center text-center">
+                    <div className={`w-16 h-16 bg-gradient-to-br ${platform.gradient} rounded-2xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
+                      <span className="text-3xl">{platform.icon}</span>
+                    </div>
+                    <h3 className="font-semibold text-sm mb-1 line-clamp-1">{platform.name}</h3>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{platform.description}</p>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-4">{platform.description}</p>
-                  <Button variant="outline" className="w-full group" asChild>
-                    <a href={platform.url} target="_blank" rel="noopener noreferrer">
-                      Перейти
-                      <Icon name="ExternalLink" size={14} className="ml-2 group-hover:translate-x-1 transition-transform" />
-                    </a>
-                  </Button>
-                </div>
-              </Card>
+                </Card>
+              </a>
             ))}
           </div>
         </div>
@@ -408,17 +407,15 @@ const Index = () => {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 animate-fade-in">
             {games.map((game) => (
-              <Card key={game.id} className="p-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center">
-                    <span className="text-2xl">🎮</span>
+              <Card key={game.id} className="overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer border-0 group">
+                <div className="p-4 flex flex-col items-center text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                    <span className="text-3xl">🎮</span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold truncate">{game.name}</h3>
-                    <p className="text-sm text-muted-foreground">{game.platform}</p>
-                  </div>
+                  <h3 className="font-semibold text-sm mb-1 line-clamp-1">{game.name}</h3>
+                  <p className="text-xs text-muted-foreground">{game.platform}</p>
                 </div>
               </Card>
             ))}
@@ -435,26 +432,25 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 animate-fade-in">
             {userPlatforms.map((platform) => (
-              <Card key={platform.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                <div className={`h-32 bg-gradient-to-br ${platform.gradient} flex items-center justify-center`}>
-                  <span className="text-6xl">{platform.icon}</span>
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-xl font-bold">{platform.name}</h3>
-                    <Badge>{platform.type === 'social' ? 'Социальная сеть' : 'Платформа'}</Badge>
+              <a 
+                key={platform.id} 
+                href={platform.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="group"
+              >
+                <Card className="overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer border-0">
+                  <div className="p-4 flex flex-col items-center text-center">
+                    <div className={`w-16 h-16 bg-gradient-to-br ${platform.gradient} rounded-2xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
+                      <span className="text-3xl">{platform.icon}</span>
+                    </div>
+                    <h3 className="font-semibold text-sm mb-1 line-clamp-1">{platform.name}</h3>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{platform.description}</p>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-4">{platform.description}</p>
-                  <Button variant="outline" className="w-full group" asChild>
-                    <a href={platform.url} target="_blank" rel="noopener noreferrer">
-                      Перейти
-                      <Icon name="ExternalLink" size={14} className="ml-2 group-hover:translate-x-1 transition-transform" />
-                    </a>
-                  </Button>
-                </div>
-              </Card>
+                </Card>
+              </a>
             ))}
           </div>
         </div>
