@@ -33,6 +33,7 @@ const Index = () => {
   const [showProfile, setShowProfile] = useState(false);
   const [showAddPlatform, setShowAddPlatform] = useState(false);
   const [showAddGame, setShowAddGame] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [activeView, setActiveView] = useState<'desktop' | 'mobile'>('desktop');
   const { toast } = useToast();
@@ -294,6 +295,14 @@ const Index = () => {
               <Button
                 variant="ghost"
                 size="icon"
+                onClick={() => setShowSearch(true)}
+                className="text-white hover:bg-white/10"
+              >
+                <Icon name="Search" size={20} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setShowProfile(true)}
                 className="text-white hover:bg-white/10"
               >
@@ -450,33 +459,7 @@ const Index = () => {
           </div>
         </div>
 
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="p-6">
-            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <Icon name="Search" size={20} />
-              Поиск Google
-            </h3>
-            <Button variant="outline" className="w-full" asChild>
-              <a href="https://google.com" target="_blank" rel="noopener noreferrer">
-                Открыть Google
-                <Icon name="ExternalLink" size={14} className="ml-2" />
-              </a>
-            </Button>
-          </Card>
 
-          <Card className="p-6">
-            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <Icon name="Search" size={20} />
-              Поиск Яндекс
-            </h3>
-            <Button variant="outline" className="w-full" asChild>
-              <a href="https://yandex.ru" target="_blank" rel="noopener noreferrer">
-                Открыть Яндекс
-                <Icon name="ExternalLink" size={14} className="ml-2" />
-              </a>
-            </Button>
-          </Card>
-        </div>
       </div>
 
       <Dialog open={showAddPlatform} onOpenChange={setShowAddPlatform}>
@@ -555,6 +538,30 @@ const Index = () => {
               />
             </div>
             <Button onClick={handleAddGame} className="w-full">Добавить</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showSearch} onOpenChange={setShowSearch}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Поиск</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <a href="https://google.com" target="_blank" rel="noopener noreferrer">
+                <Icon name="Search" size={20} className="mr-3" />
+                Поиск Google
+                <Icon name="ExternalLink" size={14} className="ml-auto" />
+              </a>
+            </Button>
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <a href="https://yandex.ru" target="_blank" rel="noopener noreferrer">
+                <Icon name="Search" size={20} className="mr-3" />
+                Поиск Яндекс
+                <Icon name="ExternalLink" size={14} className="ml-auto" />
+              </a>
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
