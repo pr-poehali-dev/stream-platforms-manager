@@ -604,6 +604,12 @@ const Index = () => {
                   </a>
                 </Button>
                 <Button variant="outline" size="sm" asChild>
+                  <a href="https://ru.savefrom.net/" target="_blank" rel="noopener noreferrer">
+                    <Icon name="Youtube" size={14} className="mr-2" />
+                    YouTube
+                  </a>
+                </Button>
+                <Button variant="outline" size="sm" asChild>
                   <a href="https://tikvideo.app/ru" target="_blank" rel="noopener noreferrer">
                     <Icon name="Music" size={14} className="mr-2" />
                     TikTok
