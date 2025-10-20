@@ -34,6 +34,14 @@ interface Game {
   name: string;
   platform: string;
   url?: string;
+  folderId?: string;
+}
+
+interface Folder {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
 }
 
 const Index = () => {
@@ -42,7 +50,9 @@ const Index = () => {
   const [showAuth, setShowAuth] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showAddContent, setShowAddContent] = useState(false);
-  const [activeAddTab, setActiveAddTab] = useState<'platform' | 'game'>('platform');
+  const [activeAddTab, setActiveAddTab] = useState<'platform' | 'game' | 'folder'>('platform');
+  const [mainActiveTab, setMainActiveTab] = useState<'streaming' | 'games' | 'other'>('streaming');
+  const [showAddFolder, setShowAddFolder] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showVideoDownloader, setShowVideoDownloader] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
@@ -122,6 +132,13 @@ const Index = () => {
     }];
   });
 
+  const [folders, setFolders] = useState<Folder[]>(() => {
+    const saved = localStorage.getItem('streamhub_folders');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+
   const [games, setGames] = useState<Game[]>(() => {
     const saved = localStorage.getItem('streamhub_games');
     return saved ? JSON.parse(saved) : [
@@ -136,6 +153,7 @@ const Index = () => {
   const [authForm, setAuthForm] = useState({ email: '', password: '' });
   const [newPlatform, setNewPlatform] = useState({ name: '', description: '', type: 'streaming' as const, url: '' });
   const [newGame, setNewGame] = useState({ name: '', platform: '', url: '' });
+  const [newFolder, setNewFolder] = useState({ name: '', icon: '📁', color: 'from-blue-500 to-blue-700' });
 
   useEffect(() => {
     localStorage.setItem('streamhub_platforms', JSON.stringify(platforms));
@@ -144,6 +162,10 @@ const Index = () => {
   useEffect(() => {
     localStorage.setItem('streamhub_games', JSON.stringify(games));
   }, [games]);
+
+  useEffect(() => {
+    localStorage.setItem('streamhub_folders', JSON.stringify(folders));
+  }, [folders]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -202,12 +224,31 @@ const Index = () => {
       id: Date.now().toString(),
       name: newGame.name,
       platform: newGame.platform || 'Разное',
-      url: newGame.url
+      url: newGame.url,
+      folderId: selectedFolder || undefined
     };
     setGames([...games, game]);
     setNewGame({ name: '', platform: '', url: '' });
     setShowAddContent(false);
     toast({ title: 'Игра добавлена!', description: `${game.name} успешно добавлена` });
+  };
+
+  const handleAddFolder = () => {
+    if (!newFolder.name.trim()) {
+      toast({ title: 'Ошибка', description: 'Введите название папки', variant: 'destructive' });
+      return;
+    }
+
+    const folder: Folder = {
+      id: Date.now().toString(),
+      name: newFolder.name,
+      icon: newFolder.icon,
+      color: newFolder.color
+    };
+    setFolders([...folders, folder]);
+    setNewFolder({ name: '', icon: '📁', color: 'from-blue-500 to-blue-700' });
+    setShowAddContent(false);
+    toast({ title: 'Папка создана!', description: `${folder.name} успешно создана` });
   };
 
   const handleDeleteAccount = () => {
@@ -433,22 +474,34 @@ const Index = () => {
       </div>
 
       <div className={`container mx-auto px-4 py-8 ${activeView === 'mobile' ? 'max-w-md' : ''}`}>
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">📺</span>
+        <Tabs value={mainActiveTab} onValueChange={(v) => setMainActiveTab(v as 'streaming' | 'games' | 'other')} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsTrigger value="streaming" className="text-base">
+              <Icon name="Tv" size={18} className="mr-2" />
+              Стриминг
+            </TabsTrigger>
+            <TabsTrigger value="games" className="text-base">
+              <Icon name="Gamepad2" size={18} className="mr-2" />
+              Игры {folders.length > 0 && <Badge className="ml-2" variant="secondary">{folders.length}</Badge>}
+            </TabsTrigger>
+            <TabsTrigger value="other" className="text-base">
+              <Icon name="Grid3x3" size={18} className="mr-2" />
+              Другое
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="streaming">
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Стриминговые платформы</h2>
+                <Button onClick={() => {
+                  setActiveAddTab('platform');
+                  setShowAddContent(true);
+                }} className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800">
+                  <Icon name="Plus" size={16} className="mr-2" />
+                  Добавить
+                </Button>
               </div>
-              <h2 className="text-2xl font-bold">Стриминговые платформы</h2>
-            </div>
-            <Button onClick={() => {
-              setActiveAddTab('platform');
-              setShowAddContent(true);
-            }} className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800">
-              <Icon name="Plus" size={16} className="mr-2" />
-              Добавить платформу
-            </Button>
-          </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {streamingPlatforms.map((platform) => (
@@ -484,27 +537,82 @@ const Index = () => {
               </div>
             ))}
           </div>
-        </div>
-
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">🎮</span>
-              </div>
-              <h2 className="text-2xl font-bold">Игры</h2>
             </div>
-            <Button onClick={() => {
-              setActiveAddTab('game');
-              setShowAddContent(true);
-            }} className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
-              <Icon name="Plus" size={16} className="mr-2" />
-              Добавить игру
-            </Button>
-          </div>
+          </TabsContent>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {games.map((game) => (
+          <TabsContent value="games">
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Игры и папки</h2>
+                <div className="flex gap-2">
+                  <Button onClick={() => {
+                    setActiveAddTab('folder');
+                    setShowAddContent(true);
+                  }} variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
+                    <Icon name="FolderPlus" size={16} className="mr-2" />
+                    Папка
+                  </Button>
+                  <Button onClick={() => {
+                    setActiveAddTab('game');
+                    setShowAddContent(true);
+                  }} className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+                    <Icon name="Plus" size={16} className="mr-2" />
+                    Игру
+                  </Button>
+                </div>
+              </div>
+
+              {folders.length > 0 && (
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <h3 className="text-sm font-semibold text-muted-foreground">Папки</h3>
+                    <Badge variant="secondary">{folders.length}</Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant={selectedFolder === null ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSelectedFolder(null)}
+                      className="h-9"
+                    >
+                      <Icon name="Folder" size={14} className="mr-2" />
+                      Все игры
+                      <Badge className="ml-2" variant="secondary">{games.length}</Badge>
+                    </Button>
+                    {folders.map((folder) => {
+                      const folderGamesCount = games.filter(g => g.folderId === folder.id).length;
+                      return (
+                        <div key={folder.id} className="relative group">
+                          <Button
+                            variant={selectedFolder === folder.id ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setSelectedFolder(folder.id)}
+                            className="h-9"
+                          >
+                            <span className="mr-2">{folder.icon}</span>
+                            {folder.name}
+                            <Badge className="ml-2" variant="secondary">{folderGamesCount}</Badge>
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute -top-2 -right-2 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => {
+                              setFolders(folders.filter(f => f.id !== folder.id));
+                              toast({ title: 'Папка удалена', description: `${folder.name} удалена` });
+                            }}
+                          >
+                            <Icon name="X" size={12} />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {games.filter(game => selectedFolder === null || game.folderId === selectedFolder).map((game) => (
               <div key={game.id} className="group relative">
                 <a
                   href={game.url}
@@ -535,21 +643,18 @@ const Index = () => {
                   <Icon name="X" size={14} />
                 </Button>
               </div>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-700 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">🚀</span>
+                ))}
               </div>
-              <h2 className="text-2xl font-bold">Другие платформы</h2>
             </div>
-          </div>
+          </TabsContent>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <TabsContent value="other">
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Другие платформы</h2>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {userPlatforms.map((platform) => (
               <div key={platform.id} className="group relative">
                 <a 
@@ -581,11 +686,11 @@ const Index = () => {
                   <Icon name="X" size={14} />
                 </Button>
               </div>
-            ))}
-          </div>
-        </div>
-
-
+              ))}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <Dialog open={showAddContent} onOpenChange={setShowAddContent}>
@@ -594,10 +699,11 @@ const Index = () => {
             <DialogTitle>Добавить контент</DialogTitle>
           </DialogHeader>
           
-          <Tabs value={activeAddTab} onValueChange={(v) => setActiveAddTab(v as 'platform' | 'game')}>
-            <TabsList className="grid w-full grid-cols-2">
+          <Tabs value={activeAddTab} onValueChange={(v) => setActiveAddTab(v as 'platform' | 'game' | 'folder')}>
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="platform">Платформа</TabsTrigger>
               <TabsTrigger value="game">Игра</TabsTrigger>
+              <TabsTrigger value="folder">Папка</TabsTrigger>
             </TabsList>
 
             <TabsContent value="platform" className="space-y-4 mt-4">
@@ -672,7 +778,75 @@ const Index = () => {
                   onChange={(e) => setNewGame({ ...newGame, url: e.target.value })}
                 />
               </div>
+              {folders.length > 0 && (
+                <div className="space-y-2">
+                  <Label htmlFor="game-folder">Папка (необязательно)</Label>
+                  <select
+                    id="game-folder"
+                    className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                    value={selectedFolder || ''}
+                    onChange={(e) => setSelectedFolder(e.target.value || null)}
+                  >
+                    <option value="">Без папки</option>
+                    {folders.map((folder) => (
+                      <option key={folder.id} value={folder.id}>{folder.icon} {folder.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <Button onClick={handleAddGame} className="w-full">Добавить игру</Button>
+            </TabsContent>
+
+            <TabsContent value="folder" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="folder-name">Название папки</Label>
+                <Input
+                  id="folder-name"
+                  placeholder="Мои игры"
+                  value={newFolder.name}
+                  onChange={(e) => setNewFolder({ ...newFolder, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="folder-icon">Иконка</Label>
+                <div className="grid grid-cols-6 gap-2">
+                  {['📁', '🎮', '🎯', '⭐', '🔥', '💥', '⚡', '🏆', '👑', '🎉', '🚀', '🎭'].map((icon) => (
+                    <Button
+                      key={icon}
+                      type="button"
+                      variant={newFolder.icon === icon ? 'default' : 'outline'}
+                      className="text-2xl h-12"
+                      onClick={() => setNewFolder({ ...newFolder, icon })}
+                    >
+                      {icon}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Цвет</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { name: 'Синий', value: 'from-blue-500 to-blue-700' },
+                    { name: 'Фиолетовый', value: 'from-purple-500 to-purple-700' },
+                    { name: 'Зеленый', value: 'from-green-500 to-green-700' },
+                    { name: 'Красный', value: 'from-red-500 to-red-700' },
+                    { name: 'Оранжевый', value: 'from-orange-500 to-orange-700' },
+                    { name: 'Розовый', value: 'from-pink-500 to-pink-700' },
+                  ].map((color) => (
+                    <Button
+                      key={color.value}
+                      type="button"
+                      variant={newFolder.color === color.value ? 'default' : 'outline'}
+                      className="h-12"
+                      onClick={() => setNewFolder({ ...newFolder, color: color.value })}
+                    >
+                      <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${color.value}`} />
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <Button onClick={handleAddFolder} className="w-full">Создать папку</Button>
             </TabsContent>
           </Tabs>
         </DialogContent>
