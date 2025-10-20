@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -41,8 +41,8 @@ const Index = () => {
   const [currentUser, setCurrentUser] = useState<{ email: string; theme: string } | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [showAddPlatform, setShowAddPlatform] = useState(false);
-  const [showAddGame, setShowAddGame] = useState(false);
+  const [showAddContent, setShowAddContent] = useState(false);
+  const [activeAddTab, setActiveAddTab] = useState<'platform' | 'game'>('platform');
   const [showSearch, setShowSearch] = useState(false);
   const [showVideoDownloader, setShowVideoDownloader] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
@@ -54,7 +54,9 @@ const Index = () => {
   const [searchEngine, setSearchEngine] = useState<'google' | 'yandex' | 'bing'>('google');
   const { toast } = useToast();
 
-  const [platforms, setPlatforms] = useState<Platform[]>([
+  const [platforms, setPlatforms] = useState<Platform[]>(() => {
+    const saved = localStorage.getItem('streamhub_platforms');
+    return saved ? JSON.parse(saved) : [
     {
       id: '1',
       name: 'Twitch',
@@ -117,21 +119,31 @@ const Index = () => {
       icon: '🔒',
       gradient: 'from-green-500 to-green-700',
       url: '#'
-    }
-  ]);
+    }];
+  });
 
-  const [games, setGames] = useState<Game[]>([
+  const [games, setGames] = useState<Game[]>(() => {
+    const saved = localStorage.getItem('streamhub_games');
+    return saved ? JSON.parse(saved) : [
     { id: '1', name: 'Dota 2', platform: 'Steam', url: 'https://store.steampowered.com/app/570/Dota_2/' },
     { id: '2', name: 'CS:GO', platform: 'Steam', url: 'https://store.steampowered.com/app/730/CounterStrike_2/' },
     { id: '3', name: 'Valorant', platform: 'Riot', url: 'https://playvalorant.com/ru-ru/' },
     { id: '4', name: 'League of Legends', platform: 'Riot', url: 'https://www.leagueoflegends.com/ru-ru/' },
     { id: '5', name: 'Fortnite', platform: 'Epic', url: 'https://www.fortnite.com/' },
-    { id: '6', name: 'Minecraft', platform: 'Mojang', url: 'https://www.minecraft.net/' }
-  ]);
+    { id: '6', name: 'Minecraft', platform: 'Mojang', url: 'https://www.minecraft.net/' }];
+  });
 
   const [authForm, setAuthForm] = useState({ email: '', password: '' });
   const [newPlatform, setNewPlatform] = useState({ name: '', description: '', type: 'streaming' as const, url: '' });
   const [newGame, setNewGame] = useState({ name: '', platform: '', url: '' });
+
+  useEffect(() => {
+    localStorage.setItem('streamhub_platforms', JSON.stringify(platforms));
+  }, [platforms]);
+
+  useEffect(() => {
+    localStorage.setItem('streamhub_games', JSON.stringify(games));
+  }, [games]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,6 +162,11 @@ const Index = () => {
   };
 
   const handleAddPlatform = () => {
+    if (!newPlatform.name.trim()) {
+      toast({ title: 'Ошибка', description: 'Введите название платформы', variant: 'destructive' });
+      return;
+    }
+
     const icons = ['🎮', '📺', '⚡', '💬', '🚀', '⭐', '🎯', '🎪', '🎨', '🎭'];
     const gradients = [
       'from-purple-500 to-purple-700',
@@ -171,20 +188,25 @@ const Index = () => {
 
     setPlatforms([...platforms, platform]);
     setNewPlatform({ name: '', description: '', type: 'streaming', url: '' });
-    setShowAddPlatform(false);
+    setShowAddContent(false);
     toast({ title: 'Платформа добавлена!', description: `${platform.name} успешно добавлена` });
   };
 
   const handleAddGame = () => {
+    if (!newGame.name.trim()) {
+      toast({ title: 'Ошибка', description: 'Введите название игры', variant: 'destructive' });
+      return;
+    }
+
     const game: Game = {
       id: Date.now().toString(),
       name: newGame.name,
-      platform: newGame.platform,
+      platform: newGame.platform || 'Разное',
       url: newGame.url
     };
     setGames([...games, game]);
     setNewGame({ name: '', platform: '', url: '' });
-    setShowAddGame(false);
+    setShowAddContent(false);
     toast({ title: 'Игра добавлена!', description: `${game.name} успешно добавлена` });
   };
 
@@ -380,7 +402,10 @@ const Index = () => {
                     <Icon name="Palette" size={16} className="mr-2" />
                     Выбор тем
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setShowAddPlatform(true)}>
+                  <DropdownMenuItem onClick={() => {
+                    setActiveAddTab('platform');
+                    setShowAddContent(true);
+                  }}>
                     <Icon name="Plus" size={16} className="mr-2" />
                     Добавить
                   </DropdownMenuItem>
@@ -416,13 +441,16 @@ const Index = () => {
               </div>
               <h2 className="text-2xl font-bold">Стриминговые платформы</h2>
             </div>
-            <Button onClick={() => setShowAddPlatform(true)} className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800">
+            <Button onClick={() => {
+              setActiveAddTab('platform');
+              setShowAddContent(true);
+            }} className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800">
               <Icon name="Plus" size={16} className="mr-2" />
               Добавить платформу
             </Button>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 animate-fade-in">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {streamingPlatforms.map((platform) => (
               <div key={platform.id} className="group relative">
                 <a 
@@ -466,13 +494,16 @@ const Index = () => {
               </div>
               <h2 className="text-2xl font-bold">Игры</h2>
             </div>
-            <Button onClick={() => setShowAddGame(true)} className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+            <Button onClick={() => {
+              setActiveAddTab('game');
+              setShowAddContent(true);
+            }} className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
               <Icon name="Plus" size={16} className="mr-2" />
               Добавить игру
             </Button>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 animate-fade-in">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {games.map((game) => (
               <div key={game.id} className="group relative">
                 <a
@@ -518,7 +549,7 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 animate-fade-in">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {userPlatforms.map((platform) => (
               <div key={platform.id} className="group relative">
                 <a 
@@ -557,92 +588,93 @@ const Index = () => {
 
       </div>
 
-      <Dialog open={showAddPlatform} onOpenChange={setShowAddPlatform}>
+      <Dialog open={showAddContent} onOpenChange={setShowAddContent}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Добавить платформу</DialogTitle>
+            <DialogTitle>Добавить контент</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="platform-name">Название</Label>
-              <Input
-                id="platform-name"
-                placeholder="Название платформы"
-                value={newPlatform.name}
-                onChange={(e) => setNewPlatform({ ...newPlatform, name: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="platform-desc">Описание</Label>
-              <Input
-                id="platform-desc"
-                placeholder="Краткое описание"
-                value={newPlatform.description}
-                onChange={(e) => setNewPlatform({ ...newPlatform, description: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="platform-url">URL (необязательно)</Label>
-              <Input
-                id="platform-url"
-                placeholder="https://..."
-                value={newPlatform.url}
-                onChange={(e) => setNewPlatform({ ...newPlatform, url: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="platform-type">Тип</Label>
-              <select
-                id="platform-type"
-                className="w-full h-10 px-3 rounded-md border border-input bg-background"
-                value={newPlatform.type}
-                onChange={(e) => setNewPlatform({ ...newPlatform, type: e.target.value as 'streaming' | 'social' | 'gaming' })}
-              >
-                <option value="streaming">Стриминг</option>
-                <option value="social">Социальная сеть</option>
-                <option value="gaming">Игровая</option>
-              </select>
-            </div>
-            <Button onClick={handleAddPlatform} className="w-full">Добавить</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+          
+          <Tabs value={activeAddTab} onValueChange={(v) => setActiveAddTab(v as 'platform' | 'game')}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="platform">Платформа</TabsTrigger>
+              <TabsTrigger value="game">Игра</TabsTrigger>
+            </TabsList>
 
-      <Dialog open={showAddGame} onOpenChange={setShowAddGame}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Добавить игру</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="game-name">Название игры</Label>
-              <Input
-                id="game-name"
-                placeholder="Название игры"
-                value={newGame.name}
-                onChange={(e) => setNewGame({ ...newGame, name: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="game-platform">Платформа</Label>
-              <Input
-                id="game-platform"
-                placeholder="Steam, PC, PlayStation и т.д."
-                value={newGame.platform}
-                onChange={(e) => setNewGame({ ...newGame, platform: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="game-url">Ссылка на игру</Label>
-              <Input
-                id="game-url"
-                placeholder="https://..."
-                value={newGame.url}
-                onChange={(e) => setNewGame({ ...newGame, url: e.target.value })}
-              />
-            </div>
-            <Button onClick={handleAddGame} className="w-full">Добавить</Button>
-          </div>
+            <TabsContent value="platform" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="platform-name">Название</Label>
+                <Input
+                  id="platform-name"
+                  placeholder="Название платформы"
+                  value={newPlatform.name}
+                  onChange={(e) => setNewPlatform({ ...newPlatform, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="platform-desc">Описание</Label>
+                <Input
+                  id="platform-desc"
+                  placeholder="Краткое описание"
+                  value={newPlatform.description}
+                  onChange={(e) => setNewPlatform({ ...newPlatform, description: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="platform-url">URL (необязательно)</Label>
+                <Input
+                  id="platform-url"
+                  placeholder="https://..."
+                  value={newPlatform.url}
+                  onChange={(e) => setNewPlatform({ ...newPlatform, url: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="platform-type">Тип</Label>
+                <select
+                  id="platform-type"
+                  className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                  value={newPlatform.type}
+                  onChange={(e) => setNewPlatform({ ...newPlatform, type: e.target.value as 'streaming' | 'social' | 'gaming' })}
+                >
+                  <option value="streaming">Стриминг</option>
+                  <option value="social">Социальная сеть</option>
+                  <option value="gaming">Игровая</option>
+                </select>
+              </div>
+              <Button onClick={handleAddPlatform} className="w-full">Добавить платформу</Button>
+            </TabsContent>
+
+            <TabsContent value="game" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="game-name">Название игры</Label>
+                <Input
+                  id="game-name"
+                  placeholder="Название игры"
+                  value={newGame.name}
+                  onChange={(e) => setNewGame({ ...newGame, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="game-platform">Платформа</Label>
+                <Input
+                  id="game-platform"
+                  placeholder="Steam, PC, PlayStation и т.д."
+                  value={newGame.platform}
+                  onChange={(e) => setNewGame({ ...newGame, platform: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="game-url">Ссылка на игру</Label>
+                <Input
+                  id="game-url"
+                  placeholder="https://..."
+                  value={newGame.url}
+                  onChange={(e) => setNewGame({ ...newGame, url: e.target.value })}
+                />
+              </div>
+              <Button onClick={handleAddGame} className="w-full">Добавить игру</Button>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
 
@@ -975,7 +1007,10 @@ const Index = () => {
               <span className="text-xs font-medium">Скачать</span>
             </button>
             <button
-              onClick={() => setShowAddGame(true)}
+              onClick={() => {
+                setActiveAddTab('game');
+                setShowAddContent(true);
+              }}
               className="flex flex-col items-center justify-center py-3 px-2 rounded-lg hover:bg-muted transition-colors"
             >
               <Icon name="Gamepad2" size={20} className="mb-1" />
