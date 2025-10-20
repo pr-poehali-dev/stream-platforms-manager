@@ -37,11 +37,22 @@ interface Game {
   folderId?: string;
 }
 
+interface FolderItem {
+  id: string;
+  name: string;
+  type: 'image' | 'video' | 'document' | 'link';
+  url?: string;
+  content?: string;
+  thumbnail?: string;
+  folderId?: string;
+}
+
 interface Folder {
   id: string;
   name: string;
   icon: string;
   color: string;
+  type: 'games' | 'files';
 }
 
 const Index = () => {
@@ -50,9 +61,10 @@ const Index = () => {
   const [showAuth, setShowAuth] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showAddContent, setShowAddContent] = useState(false);
-  const [activeAddTab, setActiveAddTab] = useState<'platform' | 'game' | 'folder'>('platform');
-  const [mainActiveTab, setMainActiveTab] = useState<'streaming' | 'games' | 'other'>('streaming');
+  const [activeAddTab, setActiveAddTab] = useState<'platform' | 'game' | 'folder' | 'file'>('platform');
+  const [mainActiveTab, setMainActiveTab] = useState<'streaming' | 'games' | 'files' | 'other'>('streaming');
   const [showAddFolder, setShowAddFolder] = useState(false);
+  const [draggedItem, setDraggedItem] = useState<{id: string; type: 'game' | 'file'} | null>(null);
   const [showSearch, setShowSearch] = useState(false);
   const [showVideoDownloader, setShowVideoDownloader] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
@@ -137,7 +149,13 @@ const Index = () => {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [folderItems, setFolderItems] = useState<FolderItem[]>(() => {
+    const saved = localStorage.getItem('streamhub_folder_items');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [selectedFileFolder, setSelectedFileFolder] = useState<string | null>(null);
 
   const [games, setGames] = useState<Game[]>(() => {
     const saved = localStorage.getItem('streamhub_games');
@@ -153,7 +171,8 @@ const Index = () => {
   const [authForm, setAuthForm] = useState({ email: '', password: '' });
   const [newPlatform, setNewPlatform] = useState({ name: '', description: '', type: 'streaming' as const, url: '' });
   const [newGame, setNewGame] = useState({ name: '', platform: '', url: '' });
-  const [newFolder, setNewFolder] = useState({ name: '', icon: '📁', color: 'from-blue-500 to-blue-700' });
+  const [newFolder, setNewFolder] = useState({ name: '', icon: '📁', color: 'from-blue-500 to-blue-700', type: 'games' as 'games' | 'files' });
+  const [newFolderItem, setNewFolderItem] = useState({ name: '', type: 'link' as 'image' | 'video' | 'document' | 'link', url: '', content: '' });
 
   useEffect(() => {
     localStorage.setItem('streamhub_platforms', JSON.stringify(platforms));
@@ -166,6 +185,10 @@ const Index = () => {
   useEffect(() => {
     localStorage.setItem('streamhub_folders', JSON.stringify(folders));
   }, [folders]);
+
+  useEffect(() => {
+    localStorage.setItem('streamhub_folder_items', JSON.stringify(folderItems));
+  }, [folderItems]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -243,12 +266,50 @@ const Index = () => {
       id: Date.now().toString(),
       name: newFolder.name,
       icon: newFolder.icon,
-      color: newFolder.color
+      color: newFolder.color,
+      type: newFolder.type
     };
     setFolders([...folders, folder]);
-    setNewFolder({ name: '', icon: '📁', color: 'from-blue-500 to-blue-700' });
+    setNewFolder({ name: '', icon: '📁', color: 'from-blue-500 to-blue-700', type: 'games' });
     setShowAddContent(false);
     toast({ title: 'Папка создана!', description: `${folder.name} успешно создана` });
+  };
+
+  const handleAddFolderItem = () => {
+    if (!newFolderItem.name.trim()) {
+      toast({ title: 'Ошибка', description: 'Введите название', variant: 'destructive' });
+      return;
+    }
+
+    const item: FolderItem = {
+      id: Date.now().toString(),
+      name: newFolderItem.name,
+      type: newFolderItem.type,
+      url: newFolderItem.url,
+      content: newFolderItem.content,
+      folderId: selectedFileFolder || undefined
+    };
+    setFolderItems([...folderItems, item]);
+    setNewFolderItem({ name: '', type: 'link', url: '', content: '' });
+    setShowAddContent(false);
+    toast({ title: 'Файл добавлен!', description: `${item.name} успешно добавлен` });
+  };
+
+  const handleDrop = (folderId: string | null, itemType: 'game' | 'file') => {
+    if (!draggedItem || draggedItem.type !== itemType) return;
+
+    if (itemType === 'game') {
+      setGames(games.map(g => 
+        g.id === draggedItem.id ? { ...g, folderId: folderId || undefined } : g
+      ));
+    } else {
+      setFolderItems(folderItems.map(item => 
+        item.id === draggedItem.id ? { ...item, folderId: folderId || undefined } : item
+      ));
+    }
+    
+    setDraggedItem(null);
+    toast({ title: 'Перемещено!', description: folderId ? 'Файл перемещен в папку' : 'Файл убран из папки' });
   };
 
   const handleDeleteAccount = () => {
@@ -474,15 +535,19 @@ const Index = () => {
       </div>
 
       <div className={`container mx-auto px-4 py-8 ${activeView === 'mobile' ? 'max-w-md' : ''}`}>
-        <Tabs value={mainActiveTab} onValueChange={(v) => setMainActiveTab(v as 'streaming' | 'games' | 'other')} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+        <Tabs value={mainActiveTab} onValueChange={(v) => setMainActiveTab(v as 'streaming' | 'games' | 'files' | 'other')} className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="streaming" className="text-base">
               <Icon name="Tv" size={18} className="mr-2" />
               Стриминг
             </TabsTrigger>
             <TabsTrigger value="games" className="text-base">
               <Icon name="Gamepad2" size={18} className="mr-2" />
-              Игры {folders.length > 0 && <Badge className="ml-2" variant="secondary">{folders.length}</Badge>}
+              Игры {folders.filter(f => f.type === 'games').length > 0 && <Badge className="ml-2" variant="secondary">{folders.filter(f => f.type === 'games').length}</Badge>}
+            </TabsTrigger>
+            <TabsTrigger value="files" className="text-base">
+              <Icon name="FolderOpen" size={18} className="mr-2" />
+              Файлы {folders.filter(f => f.type === 'files').length > 0 && <Badge className="ml-2" variant="secondary">{folders.filter(f => f.type === 'files').length}</Badge>}
             </TabsTrigger>
             <TabsTrigger value="other" className="text-base">
               <Icon name="Grid3x3" size={18} className="mr-2" />
@@ -562,24 +627,26 @@ const Index = () => {
                 </div>
               </div>
 
-              {folders.length > 0 && (
+              {folders.filter(f => f.type === 'games').length > 0 && (
                 <div className="mb-6">
                   <div className="flex items-center gap-2 mb-3">
-                    <h3 className="text-sm font-semibold text-muted-foreground">Папки</h3>
-                    <Badge variant="secondary">{folders.length}</Badge>
+                    <h3 className="text-sm font-semibold text-muted-foreground">Папки игр</h3>
+                    <Badge variant="secondary">{folders.filter(f => f.type === 'games').length}</Badge>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Button
                       variant={selectedFolder === null ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setSelectedFolder(null)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => handleDrop(null, 'game')}
                       className="h-9"
                     >
                       <Icon name="Folder" size={14} className="mr-2" />
                       Все игры
                       <Badge className="ml-2" variant="secondary">{games.length}</Badge>
                     </Button>
-                    {folders.map((folder) => {
+                    {folders.filter(f => f.type === 'games').map((folder) => {
                       const folderGamesCount = games.filter(g => g.folderId === folder.id).length;
                       return (
                         <div key={folder.id} className="relative group">
@@ -587,6 +654,8 @@ const Index = () => {
                             variant={selectedFolder === folder.id ? 'default' : 'outline'}
                             size="sm"
                             onClick={() => setSelectedFolder(folder.id)}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={() => handleDrop(folder.id, 'game')}
                             className="h-9"
                           >
                             <span className="mr-2">{folder.icon}</span>
@@ -613,7 +682,13 @@ const Index = () => {
 
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {games.filter(game => selectedFolder === null || game.folderId === selectedFolder).map((game) => (
-              <div key={game.id} className="group relative">
+              <div 
+                key={game.id} 
+                className="group relative"
+                draggable
+                onDragStart={() => setDraggedItem({id: game.id, type: 'game'})}
+                onDragEnd={() => setDraggedItem(null)}
+              >
                 <a
                   href={game.url}
                   target="_blank"
@@ -644,6 +719,141 @@ const Index = () => {
                 </Button>
               </div>
                 ))}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="files">
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Мои файлы</h2>
+                <div className="flex gap-2">
+                  <Button onClick={() => {
+                    setNewFolder({ ...newFolder, type: 'files' });
+                    setActiveAddTab('folder');
+                    setShowAddContent(true);
+                  }} variant="outline" className="border-indigo-600 text-indigo-600 hover:bg-indigo-50">
+                    <Icon name="FolderPlus" size={16} className="mr-2" />
+                    Папка
+                  </Button>
+                  <Button onClick={() => {
+                    setActiveAddTab('file');
+                    setShowAddContent(true);
+                  }} className="bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800">
+                    <Icon name="Plus" size={16} className="mr-2" />
+                    Файл
+                  </Button>
+                </div>
+              </div>
+
+              {folders.filter(f => f.type === 'files').length > 0 && (
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <h3 className="text-sm font-semibold text-muted-foreground">Папки</h3>
+                    <Badge variant="secondary">{folders.filter(f => f.type === 'files').length}</Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant={selectedFileFolder === null ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSelectedFileFolder(null)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => handleDrop(null, 'file')}
+                      className="h-9"
+                    >
+                      <Icon name="Folder" size={14} className="mr-2" />
+                      Все файлы
+                      <Badge className="ml-2" variant="secondary">{folderItems.length}</Badge>
+                    </Button>
+                    {folders.filter(f => f.type === 'files').map((folder) => {
+                      const folderItemsCount = folderItems.filter(item => item.folderId === folder.id).length;
+                      return (
+                        <div key={folder.id} className="relative group">
+                          <Button
+                            variant={selectedFileFolder === folder.id ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setSelectedFileFolder(folder.id)}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={() => handleDrop(folder.id, 'file')}
+                            className="h-9"
+                          >
+                            <span className="mr-2">{folder.icon}</span>
+                            {folder.name}
+                            <Badge className="ml-2" variant="secondary">{folderItemsCount}</Badge>
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute -top-2 -right-2 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => {
+                              setFolders(folders.filter(f => f.id !== folder.id));
+                              toast({ title: 'Папка удалена', description: `${folder.name} удалена` });
+                            }}
+                          >
+                            <Icon name="X" size={12} />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {folderItems.filter(item => selectedFileFolder === null || item.folderId === selectedFileFolder).map((item) => {
+                  const typeIcons = {
+                    image: '🖼️',
+                    video: '🎬',
+                    document: '📄',
+                    link: '🔗'
+                  };
+                  const typeColors = {
+                    image: 'from-pink-500 to-pink-700',
+                    video: 'from-purple-500 to-purple-700',
+                    document: 'from-blue-500 to-blue-700',
+                    link: 'from-green-500 to-green-700'
+                  };
+                  
+                  return (
+                    <div 
+                      key={item.id} 
+                      className="group relative"
+                      draggable
+                      onDragStart={() => setDraggedItem({id: item.id, type: 'file'})}
+                      onDragEnd={() => setDraggedItem(null)}
+                    >
+                      <a
+                        href={item.url || '#'}
+                        target={item.url ? '_blank' : undefined}
+                        rel="noopener noreferrer"
+                        className="block"
+                        onClick={(e) => !item.url && e.preventDefault()}
+                      >
+                        <Card className="overflow-hidden hover:shadow-md transition-all duration-200 cursor-move border-0">
+                          <div className="p-4 flex flex-col items-center text-center">
+                            <div className={`w-16 h-16 bg-gradient-to-br ${typeColors[item.type]} rounded-2xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
+                              <span className="text-3xl">{typeIcons[item.type]}</span>
+                            </div>
+                            <h3 className="font-semibold text-sm mb-1 line-clamp-1">{item.name}</h3>
+                            <p className="text-xs text-muted-foreground capitalize">{item.type === 'image' ? 'Изображение' : item.type === 'video' ? 'Видео' : item.type === 'document' ? 'Документ' : 'Ссылка'}</p>
+                          </div>
+                        </Card>
+                      </a>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -top-2 -right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFolderItems(folderItems.filter(i => i.id !== item.id));
+                          toast({ title: 'Файл удален', description: `${item.name} удален из списка` });
+                        }}
+                      >
+                        <Icon name="X" size={14} />
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </TabsContent>
@@ -699,10 +909,11 @@ const Index = () => {
             <DialogTitle>Добавить контент</DialogTitle>
           </DialogHeader>
           
-          <Tabs value={activeAddTab} onValueChange={(v) => setActiveAddTab(v as 'platform' | 'game' | 'folder')}>
-            <TabsList className="grid w-full grid-cols-3">
+          <Tabs value={activeAddTab} onValueChange={(v) => setActiveAddTab(v as 'platform' | 'game' | 'folder' | 'file')}>
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="platform">Платформа</TabsTrigger>
               <TabsTrigger value="game">Игра</TabsTrigger>
+              <TabsTrigger value="file">Файл</TabsTrigger>
               <TabsTrigger value="folder">Папка</TabsTrigger>
             </TabsList>
 
@@ -778,7 +989,7 @@ const Index = () => {
                   onChange={(e) => setNewGame({ ...newGame, url: e.target.value })}
                 />
               </div>
-              {folders.length > 0 && (
+              {folders.filter(f => f.type === 'games').length > 0 && (
                 <div className="space-y-2">
                   <Label htmlFor="game-folder">Папка (необязательно)</Label>
                   <select
@@ -788,7 +999,7 @@ const Index = () => {
                     onChange={(e) => setSelectedFolder(e.target.value || null)}
                   >
                     <option value="">Без папки</option>
-                    {folders.map((folder) => (
+                    {folders.filter(f => f.type === 'games').map((folder) => (
                       <option key={folder.id} value={folder.id}>{folder.icon} {folder.name}</option>
                     ))}
                   </select>
@@ -797,12 +1008,76 @@ const Index = () => {
               <Button onClick={handleAddGame} className="w-full">Добавить игру</Button>
             </TabsContent>
 
+            <TabsContent value="file" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="file-name">Название</Label>
+                <Input
+                  id="file-name"
+                  placeholder="Мой файл"
+                  value={newFolderItem.name}
+                  onChange={(e) => setNewFolderItem({ ...newFolderItem, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="file-type">Тип файла</Label>
+                <select
+                  id="file-type"
+                  className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                  value={newFolderItem.type}
+                  onChange={(e) => setNewFolderItem({ ...newFolderItem, type: e.target.value as 'image' | 'video' | 'document' | 'link' })}
+                >
+                  <option value="link">🔗 Ссылка</option>
+                  <option value="image">🖼️ Изображение</option>
+                  <option value="video">🎬 Видео</option>
+                  <option value="document">📄 Документ</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="file-url">URL</Label>
+                <Input
+                  id="file-url"
+                  placeholder="https://..."
+                  value={newFolderItem.url}
+                  onChange={(e) => setNewFolderItem({ ...newFolderItem, url: e.target.value })}
+                />
+              </div>
+              {folders.filter(f => f.type === 'files').length > 0 && (
+                <div className="space-y-2">
+                  <Label htmlFor="file-folder">Папка (необязательно)</Label>
+                  <select
+                    id="file-folder"
+                    className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                    value={selectedFileFolder || ''}
+                    onChange={(e) => setSelectedFileFolder(e.target.value || null)}
+                  >
+                    <option value="">Без папки</option>
+                    {folders.filter(f => f.type === 'files').map((folder) => (
+                      <option key={folder.id} value={folder.id}>{folder.icon} {folder.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <Button onClick={handleAddFolderItem} className="w-full">Добавить файл</Button>
+            </TabsContent>
+
             <TabsContent value="folder" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="folder-type">Тип папки</Label>
+                <select
+                  id="folder-type"
+                  className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                  value={newFolder.type}
+                  onChange={(e) => setNewFolder({ ...newFolder, type: e.target.value as 'games' | 'files' })}
+                >
+                  <option value="games">🎮 Папка для игр</option>
+                  <option value="files">📁 Папка для файлов</option>
+                </select>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="folder-name">Название папки</Label>
                 <Input
                   id="folder-name"
-                  placeholder="Мои игры"
+                  placeholder={newFolder.type === 'games' ? 'Мои игры' : 'Мои файлы'}
                   value={newFolder.name}
                   onChange={(e) => setNewFolder({ ...newFolder, name: e.target.value })}
                 />
