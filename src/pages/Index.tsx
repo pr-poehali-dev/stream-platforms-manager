@@ -462,10 +462,10 @@ const Index = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setShowSearch(true)}
+                onClick={() => window.open('https://www.google.com', '_blank')}
                 className="text-white hover:bg-white/20 rounded-2xl w-12 h-12"
               >
-                <Icon name="Search" size={20} />
+                <Icon name="Globe" size={20} />
               </Button>
               
               {isAuthenticated ? (
@@ -1036,46 +1036,52 @@ const Index = () => {
                   onChange={(e) => setNewFolderItem({ ...newFolderItem, type: e.target.value as 'image' | 'video' | 'document' | 'link' })}
                 >
                   <option value="link">🔗 Ссылка</option>
-                  <option value="image">🖼️ Изображение</option>
+                  <option value="image">🖼️ Фотография</option>
                   <option value="video">🎬 Видео</option>
                   <option value="document">📄 Документ</option>
                 </select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="file-upload">Прикрепить файл</Label>
-                <Input
-                  id="file-upload"
-                  type="file"
-                  accept={newFolderItem.type === 'image' ? 'image/*' : newFolderItem.type === 'video' ? 'video/*' : newFolderItem.type === 'document' ? '.pdf,.doc,.docx,.txt' : '*'}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onload = (event) => {
-                        const fileUrl = event.target?.result as string;
-                        setNewFolderItem({ 
-                          ...newFolderItem, 
-                          url: fileUrl,
-                          name: newFolderItem.name || file.name
-                        });
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Или укажите URL ниже
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="file-url">URL (необязательно)</Label>
-                <Input
-                  id="file-url"
-                  placeholder="https://..."
-                  value={newFolderItem.url}
-                  onChange={(e) => setNewFolderItem({ ...newFolderItem, url: e.target.value })}
-                />
-              </div>
+              {newFolderItem.type === 'link' ? (
+                <div className="space-y-2">
+                  <Label htmlFor="file-url">URL</Label>
+                  <Input
+                    id="file-url"
+                    placeholder="https://..."
+                    value={newFolderItem.url}
+                    onChange={(e) => setNewFolderItem({ ...newFolderItem, url: e.target.value })}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="file-upload" className="cursor-pointer">
+                    <div className="flex items-center gap-2 w-full h-10 px-4 rounded-md border border-input bg-background hover:bg-accent">
+                      <Icon name="Paperclip" size={16} />
+                      <span>{newFolderItem.url ? newFolderItem.name || 'Файл выбран' : 'Прикрепить файл'}</span>
+                    </div>
+                  </Label>
+                  <Input
+                    id="file-upload"
+                    type="file"
+                    className="hidden"
+                    accept={newFolderItem.type === 'image' ? 'image/*' : newFolderItem.type === 'video' ? 'video/*' : newFolderItem.type === 'document' ? '.pdf,.doc,.docx,.txt' : '*'}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const fileUrl = event.target?.result as string;
+                          setNewFolderItem({ 
+                            ...newFolderItem, 
+                            url: fileUrl,
+                            name: newFolderItem.name || file.name
+                          });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                </div>
+              )}
               {folders.filter(f => f.type === 'files').length > 0 && (
                 <div className="space-y-2">
                   <Label htmlFor="file-folder">Папка (необязательно)</Label>
