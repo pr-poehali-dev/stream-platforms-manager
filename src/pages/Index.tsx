@@ -458,7 +458,16 @@ const Index = () => {
             </DropdownMenu>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowSearch(true)}
+                className="text-white hover:bg-white/20 rounded-2xl w-12 h-12"
+              >
+                <Icon name="Search" size={20} />
+              </Button>
+              
               {isAuthenticated ? (
                 <Button
                   variant="ghost"
@@ -1033,7 +1042,33 @@ const Index = () => {
                 </select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="file-url">URL</Label>
+                <Label htmlFor="file-upload">Прикрепить файл</Label>
+                <Input
+                  id="file-upload"
+                  type="file"
+                  accept={newFolderItem.type === 'image' ? 'image/*' : newFolderItem.type === 'video' ? 'video/*' : newFolderItem.type === 'document' ? '.pdf,.doc,.docx,.txt' : '*'}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        const fileUrl = event.target?.result as string;
+                        setNewFolderItem({ 
+                          ...newFolderItem, 
+                          url: fileUrl,
+                          name: newFolderItem.name || file.name
+                        });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Или укажите URL ниже
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="file-url">URL (необязательно)</Label>
                 <Input
                   id="file-url"
                   placeholder="https://..."
