@@ -459,14 +459,31 @@ const Index = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => window.open('https://www.google.com', '_blank')}
-                className="text-white hover:bg-white/20 rounded-2xl w-12 h-12"
-              >
-                <Icon name="Globe" size={20} />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-white/20 rounded-2xl w-12 h-12"
+                  >
+                    <Icon name="Globe" size={20} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => window.open('https://www.google.com', '_blank')}>
+                    <Icon name="Search" size={16} className="mr-2" />
+                    Google
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => window.open('https://ya.ru', '_blank')}>
+                    <Icon name="Search" size={16} className="mr-2" />
+                    Яндекс
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => window.open('https://www.bing.com', '_blank')}>
+                    <Icon name="Search" size={16} className="mr-2" />
+                    Bing
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               
               {isAuthenticated ? (
                 <Button
