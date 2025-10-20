@@ -74,6 +74,7 @@ const Index = () => {
   const [wallpaperTheme, setWallpaperTheme] = useState<'light' | 'dark' | 'custom'>('light');
   const [customWallpaper, setCustomWallpaper] = useState('');
   const [searchEngine, setSearchEngine] = useState<'google' | 'yandex' | 'bing'>('google');
+  const [fileSearchQuery, setFileSearchQuery] = useState('');
   const { toast } = useToast();
 
   const [platforms, setPlatforms] = useState<Platform[]>(() => {
@@ -720,6 +721,15 @@ const Index = () => {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold">Мои файлы</h2>
                 <div className="flex gap-2">
+                  <div className="relative flex-1 max-w-md">
+                    <Icon name="Search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      placeholder="Поиск по файлам..."
+                      value={fileSearchQuery}
+                      onChange={(e) => setFileSearchQuery(e.target.value)}
+                      className="pl-9 h-9"
+                    />
+                  </div>
                   <Button onClick={() => {
                     setNewFolder({ ...newFolder, type: 'files' });
                     setActiveAddTab('folder');
@@ -792,7 +802,13 @@ const Index = () => {
               )}
 
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {folderItems.filter(item => selectedFileFolder === null || item.folderId === selectedFileFolder).map((item) => {
+                {folderItems
+                  .filter(item => selectedFileFolder === null || item.folderId === selectedFileFolder)
+                  .filter(item => 
+                    fileSearchQuery === '' || 
+                    item.name.toLowerCase().includes(fileSearchQuery.toLowerCase())
+                  )
+                  .map((item) => {
                   const typeIcons = {
                     image: '🖼️',
                     video: '🎬',
