@@ -80,6 +80,7 @@ const Index = () => {
   const [showVideoThemeSelector, setShowVideoThemeSelector] = useState(false);
   const [videoTheme, setVideoTheme] = useState('');
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [previewFile, setPreviewFile] = useState<FolderItem | null>(null);
   const { toast } = useToast();
 
@@ -289,7 +290,12 @@ const Index = () => {
       return;
     }
 
-    const fileSize = newFolderItem.type === 'link' ? '0 Кб' : `${Math.floor(Math.random() * 500 + 10)} Кб`;
+    let fileSize = '0 Кб';
+    if (newFolderItem.type !== 'link' && uploadedFile) {
+      const sizeKb = Math.floor(uploadedFile.size / 1024);
+      fileSize = `${sizeKb} Кб`;
+    }
+    
     const item: FolderItem = {
       id: Date.now().toString(),
       name: newFolderItem.name,
@@ -302,6 +308,7 @@ const Index = () => {
     };
     setFolderItems([...folderItems, item]);
     setNewFolderItem({ name: '', type: 'link', url: '', content: '' });
+    setUploadedFile(null);
     setShowAddContent(false);
     toast({ title: 'Файл добавлен!', description: `${item.name} успешно добавлен` });
   };
@@ -1196,16 +1203,14 @@ const Index = () => {
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          const fileUrl = event.target?.result as string;
-                          setNewFolderItem({ 
-                            ...newFolderItem, 
-                            url: fileUrl,
-                            name: newFolderItem.name || file.name
-                          });
-                        };
-                        reader.readAsDataURL(file);
+                        const fileUrl = URL.createObjectURL(file);
+                        setUploadedFile(file);
+                        setNewFolderItem({ 
+                          ...newFolderItem, 
+                          url: fileUrl,
+                          name: newFolderItem.name || file.name
+                        });
+                        toast({ title: 'Файл выбран', description: file.name });
                       }
                     }}
                   />
