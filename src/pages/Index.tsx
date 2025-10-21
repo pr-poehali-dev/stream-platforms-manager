@@ -426,6 +426,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
+              <h1 className="text-2xl font-bold">StreamHub</h1>
             </div>
 
             <div className="flex items-center gap-2">
@@ -532,24 +533,26 @@ const Index = () => {
 
       <div className={`container mx-auto px-4 py-8 ${activeView === 'mobile' ? 'max-w-md' : ''}`}>
         <Tabs value={mainActiveTab} onValueChange={(v) => setMainActiveTab(v as 'streaming' | 'games' | 'files' | 'other')} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
-            <TabsTrigger value="streaming" className="text-base">
-              <Icon name="Tv" size={18} className="mr-2" />
-              Стриминг
-            </TabsTrigger>
-            <TabsTrigger value="games" className="text-base">
-              <Icon name="Gamepad2" size={18} className="mr-2" />
-              Игры {folders.filter(f => f.type === 'games').length > 0 && <Badge className="ml-2" variant="secondary">{folders.filter(f => f.type === 'games').length}</Badge>}
-            </TabsTrigger>
-            <TabsTrigger value="files" className="text-base">
-              <Icon name="FolderOpen" size={18} className="mr-2" />
-              Файлы {folders.filter(f => f.type === 'files').length > 0 && <Badge className="ml-2" variant="secondary">{folders.filter(f => f.type === 'files').length}</Badge>}
-            </TabsTrigger>
-            <TabsTrigger value="other" className="text-base">
-              <Icon name="Grid3x3" size={18} className="mr-2" />
-              Другое
-            </TabsTrigger>
-          </TabsList>
+          {activeView !== 'mobile' && (
+            <TabsList className="grid w-full grid-cols-4 mb-8">
+              <TabsTrigger value="streaming" className="text-base">
+                <Icon name="Tv" size={18} className="mr-2" />
+                Стриминг
+              </TabsTrigger>
+              <TabsTrigger value="games" className="text-base">
+                <Icon name="Gamepad2" size={18} className="mr-2" />
+                Игры {folders.filter(f => f.type === 'games').length > 0 && <Badge className="ml-2" variant="secondary">{folders.filter(f => f.type === 'games').length}</Badge>}
+              </TabsTrigger>
+              <TabsTrigger value="files" className="text-base">
+                <Icon name="FolderOpen" size={18} className="mr-2" />
+                Файлы {folders.filter(f => f.type === 'files').length > 0 && <Badge className="ml-2" variant="secondary">{folders.filter(f => f.type === 'files').length}</Badge>}
+              </TabsTrigger>
+              <TabsTrigger value="other" className="text-base">
+                <Icon name="Grid3x3" size={18} className="mr-2" />
+                Другое
+              </TabsTrigger>
+            </TabsList>
+          )}
 
           <TabsContent value="streaming">
             <div className="mb-8">
@@ -1560,11 +1563,11 @@ const Index = () => {
               <span className="text-xs font-medium">Файлы</span>
             </button>
             <button
-              onClick={() => setMainActiveTab('other')}
-              className={`flex flex-col items-center justify-center py-3 px-2 rounded-lg transition-colors ${mainActiveTab === 'other' ? 'bg-purple-100 text-purple-700' : 'hover:bg-muted'}`}
+              onClick={() => setMainActiveTab('games')}
+              className={`flex flex-col items-center justify-center py-3 px-2 rounded-lg transition-colors ${mainActiveTab === 'games' ? 'bg-purple-100 text-purple-700' : 'hover:bg-muted'}`}
             >
-              <Icon name="Grid3x3" size={20} className="mb-1" />
-              <span className="text-xs font-medium">Другое</span>
+              <Icon name="Gamepad2" size={20} className="mb-1" />
+              <span className="text-xs font-medium">Игры</span>
             </button>
             {isAuthenticated ? (
               <button
