@@ -75,6 +75,9 @@ const Index = () => {
   const [customWallpaper, setCustomWallpaper] = useState('');
   const [searchEngine, setSearchEngine] = useState<'google' | 'yandex' | 'bing'>('google');
   const [fileSearchQuery, setFileSearchQuery] = useState('');
+  const [showVideoThemeSelector, setShowVideoThemeSelector] = useState(false);
+  const [videoTheme, setVideoTheme] = useState('');
+  const [videoFile, setVideoFile] = useState<File | null>(null);
   const { toast } = useToast();
 
   const [platforms, setPlatforms] = useState<Platform[]>(() => {
@@ -489,8 +492,8 @@ const Index = () => {
                       Профиль
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={() => setShowVideoDownloader(true)}>
-                    <Icon name="Download" size={16} className="mr-2" />
+                  <DropdownMenuItem onClick={() => setShowVideoThemeSelector(true)}>
+                    <Icon name="Video" size={16} className="mr-2" />
                     Загрузки видео
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setShowWallpaperSettings(true)}>
@@ -1264,6 +1267,67 @@ const Index = () => {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={showVideoThemeSelector} onOpenChange={setShowVideoThemeSelector}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Загрузки видео</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="video-theme">Выбрать тему</Label>
+              <Input
+                id="video-theme"
+                placeholder="Введите тему видео..."
+                value={videoTheme}
+                onChange={(e) => setVideoTheme(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="video-file">Загрузить видео</Label>
+              <Input
+                id="video-file"
+                type="file"
+                accept="video/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setVideoFile(file);
+                    toast({ title: 'Файл выбран', description: file.name });
+                  }
+                }}
+              />
+            </div>
+            <Button 
+              onClick={() => {
+                if (!videoTheme.trim()) {
+                  toast({ title: 'Ошибка', description: 'Введите тему видео', variant: 'destructive' });
+                  return;
+                }
+                if (!videoFile) {
+                  toast({ title: 'Ошибка', description: 'Выберите видео файл', variant: 'destructive' });
+                  return;
+                }
+                const newItem: FolderItem = {
+                  id: Date.now().toString(),
+                  name: videoTheme,
+                  type: 'video',
+                  url: URL.createObjectURL(videoFile),
+                };
+                setFolderItems([...folderItems, newItem]);
+                setVideoTheme('');
+                setVideoFile(null);
+                setShowVideoThemeSelector(false);
+                toast({ title: 'Видео добавлено!', description: `${videoTheme} успешно добавлено в файлы` });
+              }}
+              className="w-full"
+            >
+              <Icon name="Upload" size={16} className="mr-2" />
+              Добавить видео
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showProfile} onOpenChange={setShowProfile}>
         <DialogContent>
           <DialogHeader>
@@ -1482,28 +1546,25 @@ const Index = () => {
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border shadow-lg z-50">
           <div className="grid grid-cols-4 gap-1 p-2">
             <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="flex flex-col items-center justify-center py-3 px-2 rounded-lg hover:bg-muted transition-colors"
+              onClick={() => setMainActiveTab('streaming')}
+              className={`flex flex-col items-center justify-center py-3 px-2 rounded-lg transition-colors ${mainActiveTab === 'streaming' ? 'bg-purple-100 text-purple-700' : 'hover:bg-muted'}`}
             >
-              <Icon name="Home" size={20} className="mb-1" />
-              <span className="text-xs font-medium">Главная</span>
+              <Icon name="Tv" size={20} className="mb-1" />
+              <span className="text-xs font-medium">Стриминг</span>
             </button>
             <button
-              onClick={() => setShowVideoDownloader(true)}
-              className="flex flex-col items-center justify-center py-3 px-2 rounded-lg hover:bg-muted transition-colors"
+              onClick={() => setMainActiveTab('files')}
+              className={`flex flex-col items-center justify-center py-3 px-2 rounded-lg transition-colors ${mainActiveTab === 'files' ? 'bg-purple-100 text-purple-700' : 'hover:bg-muted'}`}
             >
-              <Icon name="Download" size={20} className="mb-1" />
-              <span className="text-xs font-medium">Скачать</span>
+              <Icon name="FolderOpen" size={20} className="mb-1" />
+              <span className="text-xs font-medium">Файлы</span>
             </button>
             <button
-              onClick={() => {
-                setActiveAddTab('game');
-                setShowAddContent(true);
-              }}
-              className="flex flex-col items-center justify-center py-3 px-2 rounded-lg hover:bg-muted transition-colors"
+              onClick={() => setMainActiveTab('other')}
+              className={`flex flex-col items-center justify-center py-3 px-2 rounded-lg transition-colors ${mainActiveTab === 'other' ? 'bg-purple-100 text-purple-700' : 'hover:bg-muted'}`}
             >
-              <Icon name="Gamepad2" size={20} className="mb-1" />
-              <span className="text-xs font-medium">Игры</span>
+              <Icon name="Grid3x3" size={20} className="mb-1" />
+              <span className="text-xs font-medium">Другое</span>
             </button>
             {isAuthenticated ? (
               <button
@@ -1511,7 +1572,7 @@ const Index = () => {
                 className="flex flex-col items-center justify-center py-3 px-2 rounded-lg hover:bg-muted transition-colors"
               >
                 <Icon name="User" size={20} className="mb-1" />
-                <span className="text-xs font-medium">Профиль</span>
+                <span className="text-xs font-medium">Войти</span>
               </button>
             ) : (
               <button
