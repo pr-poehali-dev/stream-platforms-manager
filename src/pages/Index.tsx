@@ -887,12 +887,18 @@ const Index = () => {
                                   size="icon"
                                   variant="ghost"
                                   className="h-8 w-8"
-                                  onClick={() => {
-                                    const link = document.createElement('a');
-                                    link.href = item.url!;
-                                    link.download = item.name;
-                                    link.click();
-                                    toast({ title: 'Скачивание началось', description: item.name });
+                                  onClick={async () => {
+                                    try {
+                                      const link = document.createElement('a');
+                                      link.href = item.url!;
+                                      link.download = item.name;
+                                      document.body.appendChild(link);
+                                      link.click();
+                                      document.body.removeChild(link);
+                                      toast({ title: 'Скачивание началось', description: item.name });
+                                    } catch (error) {
+                                      toast({ title: 'Ошибка', description: 'Не удалось скачать файл', variant: 'destructive' });
+                                    }
                                   }}
                                 >
                                   <Icon name="Download" size={14} />
@@ -968,11 +974,17 @@ const Index = () => {
                                     size="sm"
                                     className="flex-1 h-8 text-xs bg-gradient-to-r from-purple-600 to-purple-700"
                                     onClick={() => {
-                                      const link = document.createElement('a');
-                                      link.href = item.url!;
-                                      link.download = item.name;
-                                      link.click();
-                                      toast({ title: 'Скачивание началось', description: item.name });
+                                      try {
+                                        const link = document.createElement('a');
+                                        link.href = item.url!;
+                                        link.download = item.name;
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        document.body.removeChild(link);
+                                        toast({ title: 'Скачивание началось', description: item.name });
+                                      } catch (error) {
+                                        toast({ title: 'Ошибка', description: 'Не удалось скачать файл', variant: 'destructive' });
+                                      }
                                     }}
                                   >
                                     <Icon name="Download" size={12} className="mr-1" />
@@ -1745,12 +1757,28 @@ const Index = () => {
               </video>
             )}
             {previewFile?.type === 'document' && previewFile.url && (
-              <div className="w-full">
-                <iframe
-                  src={previewFile.url}
-                  className="w-full h-[70vh] rounded-lg border"
-                  title={previewFile.name}
-                />
+              <div className="w-full space-y-4">
+                <div className="text-center p-8 bg-muted/50 rounded-lg">
+                  <div className="text-6xl mb-4">📄</div>
+                  <h3 className="text-lg font-semibold mb-2">{previewFile.name}</h3>
+                  <p className="text-muted-foreground mb-4">Предпросмотр документа</p>
+                  <div className="flex justify-center gap-2">
+                    <Button
+                      onClick={() => window.open(previewFile.url, '_blank')}
+                    >
+                      <Icon name="ExternalLink" size={16} className="mr-2" />
+                      Открыть в новой вкладке
+                    </Button>
+                  </div>
+                </div>
+                <div className="border rounded-lg overflow-hidden">
+                  <iframe
+                    src={`${previewFile.url}#toolbar=0&navpanes=0`}
+                    className="w-full h-[50vh]"
+                    title={previewFile.name}
+                    sandbox="allow-same-origin"
+                  />
+                </div>
               </div>
             )}
             {previewFile?.type === 'link' && previewFile.url && (
@@ -1772,14 +1800,20 @@ const Index = () => {
               <p><strong>Дата:</strong> {previewFile?.dateAdded || 'Неизвестно'}</p>
             </div>
             <div className="flex gap-2">
-              {previewFile?.url && (
+              {previewFile?.url && previewFile.type !== 'link' && (
                 <Button
                   onClick={() => {
-                    const link = document.createElement('a');
-                    link.href = previewFile.url!;
-                    link.download = previewFile.name;
-                    link.click();
-                    toast({ title: 'Скачивание началось', description: previewFile.name });
+                    try {
+                      const link = document.createElement('a');
+                      link.href = previewFile.url!;
+                      link.download = previewFile.name;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      toast({ title: 'Скачивание началось', description: previewFile.name });
+                    } catch (error) {
+                      toast({ title: 'Ошибка', description: 'Не удалось скачать файл', variant: 'destructive' });
+                    }
                   }}
                 >
                   <Icon name="Download" size={16} className="mr-2" />
