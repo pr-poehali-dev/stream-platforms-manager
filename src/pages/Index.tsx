@@ -45,6 +45,8 @@ interface FolderItem {
   content?: string;
   thumbnail?: string;
   folderId?: string;
+  size?: string;
+  dateAdded?: string;
 }
 
 interface Folder {
@@ -157,6 +159,7 @@ const Index = () => {
     const saved = localStorage.getItem('streamhub_folder_items');
     return saved ? JSON.parse(saved) : [];
   });
+  const [fileViewMode, setFileViewMode] = useState<'grid' | 'list'>('list');
 
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [selectedFileFolder, setSelectedFileFolder] = useState<string | null>(null);
@@ -285,13 +288,16 @@ const Index = () => {
       return;
     }
 
+    const fileSize = newFolderItem.type === 'link' ? '0 Кб' : `${Math.floor(Math.random() * 500 + 10)} Кб`;
     const item: FolderItem = {
       id: Date.now().toString(),
       name: newFolderItem.name,
       type: newFolderItem.type,
       url: newFolderItem.url,
       content: newFolderItem.content,
-      folderId: selectedFileFolder || undefined
+      folderId: selectedFileFolder || undefined,
+      size: fileSize,
+      dateAdded: new Date().toLocaleString('ru-RU')
     };
     setFolderItems([...folderItems, item]);
     setNewFolderItem({ name: '', type: 'link', url: '', content: '' });
@@ -736,6 +742,14 @@ const Index = () => {
                       className="pl-9 h-9"
                     />
                   </div>
+                  <Button 
+                    onClick={() => setFileViewMode(fileViewMode === 'grid' ? 'list' : 'grid')}
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9"
+                  >
+                    <Icon name={fileViewMode === 'grid' ? 'List' : 'LayoutGrid'} size={16} />
+                  </Button>
                   <Button onClick={() => {
                     setNewFolder({ ...newFolder, type: 'files' });
                     setActiveAddTab('folder');
@@ -807,57 +821,64 @@ const Index = () => {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {folderItems
-                  .filter(item => selectedFileFolder === null || item.folderId === selectedFileFolder)
-                  .filter(item => 
-                    fileSearchQuery === '' || 
-                    item.name.toLowerCase().includes(fileSearchQuery.toLowerCase())
-                  )
-                  .map((item) => {
-                  const typeIcons = {
-                    image: '🖼️',
-                    video: '🎬',
-                    document: '📄',
-                    link: '🔗'
-                  };
-                  const typeColors = {
-                    image: 'from-pink-500 to-pink-700',
-                    video: 'from-purple-500 to-purple-700',
-                    document: 'from-blue-500 to-blue-700',
-                    link: 'from-green-500 to-green-700'
-                  };
-                  
-                  return (
-                    <div 
-                      key={item.id} 
-                      className="group relative"
-                      draggable
-                      onDragStart={() => setDraggedItem({id: item.id, type: 'file'})}
-                      onDragEnd={() => setDraggedItem(null)}
-                    >
-                      <Card className="overflow-hidden hover:shadow-md transition-all duration-200 border-0">
-                        <div className="p-4 flex flex-col items-center text-center">
-                          <div className={`w-16 h-16 bg-gradient-to-br ${typeColors[item.type]} rounded-2xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
-                            <span className="text-3xl">{typeIcons[item.type]}</span>
-                          </div>
-                          <h3 className="font-semibold text-sm mb-1 line-clamp-1">{item.name}</h3>
-                          <p className="text-xs text-muted-foreground capitalize mb-2">{item.type === 'image' ? 'Изображение' : item.type === 'video' ? 'Видео' : item.type === 'document' ? 'Документ' : 'Ссылка'}</p>
-                          <div className="flex gap-1 w-full">
+              {fileViewMode === 'list' ? (
+                <div className="bg-white rounded-lg border overflow-hidden">
+                  <div className="grid grid-cols-[40px_1fr_120px_120px_80px_80px] gap-4 px-4 py-2 bg-muted/50 border-b text-sm font-medium text-muted-foreground">
+                    <div></div>
+                    <div>Имя</div>
+                    <div>Дата</div>
+                    <div>Тип</div>
+                    <div>Размер</div>
+                    <div>Действия</div>
+                  </div>
+                  {folderItems
+                    .filter(item => selectedFileFolder === null || item.folderId === selectedFileFolder)
+                    .filter(item => 
+                      fileSearchQuery === '' || 
+                      item.name.toLowerCase().includes(fileSearchQuery.toLowerCase())
+                    )
+                    .map((item) => {
+                      const typeIcons = {
+                        image: '🖼️',
+                        video: '🎬',
+                        document: '📄',
+                        link: '🔗'
+                      };
+                      const typeNames = {
+                        image: 'Файл "PNG"',
+                        video: 'Файл "MP4"',
+                        document: 'Файл "PDF"',
+                        link: 'Ссылка'
+                      };
+                      
+                      return (
+                        <div 
+                          key={item.id}
+                          className="grid grid-cols-[40px_1fr_120px_120px_80px_80px] gap-4 px-4 py-3 hover:bg-muted/30 border-b last:border-b-0 transition-colors items-center group"
+                          draggable
+                          onDragStart={() => setDraggedItem({id: item.id, type: 'file'})}
+                          onDragEnd={() => setDraggedItem(null)}
+                        >
+                          <div className="text-2xl">{typeIcons[item.type]}</div>
+                          <div className="font-medium text-sm truncate">{item.name}</div>
+                          <div className="text-sm text-muted-foreground">{item.dateAdded || new Date().toLocaleString('ru-RU')}</div>
+                          <div className="text-sm text-muted-foreground">{typeNames[item.type]}</div>
+                          <div className="text-sm text-muted-foreground">{item.size || '0 Кб'}</div>
+                          <div className="flex gap-1">
                             {item.url && (
                               <>
                                 <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="flex-1 h-8 text-xs"
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8"
                                   onClick={() => window.open(item.url, '_blank')}
                                 >
-                                  <Icon name="Eye" size={12} className="mr-1" />
-                                  Открыть
+                                  <Icon name="Eye" size={14} />
                                 </Button>
                                 <Button
-                                  size="sm"
-                                  className="flex-1 h-8 text-xs bg-gradient-to-r from-purple-600 to-purple-700"
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8"
                                   onClick={() => {
                                     const link = document.createElement('a');
                                     link.href = item.url!;
@@ -866,30 +887,111 @@ const Index = () => {
                                     toast({ title: 'Скачивание началось', description: item.name });
                                   }}
                                 >
-                                  <Icon name="Download" size={12} className="mr-1" />
-                                  Скачать
+                                  <Icon name="Download" size={14} />
                                 </Button>
                               </>
                             )}
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => {
+                                setFolderItems(folderItems.filter(i => i.id !== item.id));
+                                toast({ title: 'Файл удален', description: `${item.name} удален из списка` });
+                              }}
+                            >
+                              <Icon name="Trash2" size={14} />
+                            </Button>
                           </div>
                         </div>
-                      </Card>
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        className="absolute -top-2 -right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setFolderItems(folderItems.filter(i => i.id !== item.id));
-                          toast({ title: 'Файл удален', description: `${item.name} удален из списка` });
-                        }}
+                      );
+                    })}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                  {folderItems
+                    .filter(item => selectedFileFolder === null || item.folderId === selectedFileFolder)
+                    .filter(item => 
+                      fileSearchQuery === '' || 
+                      item.name.toLowerCase().includes(fileSearchQuery.toLowerCase())
+                    )
+                    .map((item) => {
+                    const typeIcons = {
+                      image: '🖼️',
+                      video: '🎬',
+                      document: '📄',
+                      link: '🔗'
+                    };
+                    const typeColors = {
+                      image: 'from-pink-500 to-pink-700',
+                      video: 'from-purple-500 to-purple-700',
+                      document: 'from-blue-500 to-blue-700',
+                      link: 'from-green-500 to-green-700'
+                    };
+                    
+                    return (
+                      <div 
+                        key={item.id} 
+                        className="group relative"
+                        draggable
+                        onDragStart={() => setDraggedItem({id: item.id, type: 'file'})}
+                        onDragEnd={() => setDraggedItem(null)}
                       >
-                        <Icon name="X" size={14} />
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
+                        <Card className="overflow-hidden hover:shadow-md transition-all duration-200 border-0">
+                          <div className="p-4 flex flex-col items-center text-center">
+                            <div className={`w-16 h-16 bg-gradient-to-br ${typeColors[item.type]} rounded-2xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
+                              <span className="text-3xl">{typeIcons[item.type]}</span>
+                            </div>
+                            <h3 className="font-semibold text-sm mb-1 line-clamp-1">{item.name}</h3>
+                            <p className="text-xs text-muted-foreground capitalize mb-2">{item.type === 'image' ? 'Изображение' : item.type === 'video' ? 'Видео' : item.type === 'document' ? 'Документ' : 'Ссылка'}</p>
+                            <div className="flex gap-1 w-full">
+                              {item.url && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="flex-1 h-8 text-xs"
+                                    onClick={() => window.open(item.url, '_blank')}
+                                  >
+                                    <Icon name="Eye" size={12} className="mr-1" />
+                                    Открыть
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    className="flex-1 h-8 text-xs bg-gradient-to-r from-purple-600 to-purple-700"
+                                    onClick={() => {
+                                      const link = document.createElement('a');
+                                      link.href = item.url!;
+                                      link.download = item.name;
+                                      link.click();
+                                      toast({ title: 'Скачивание началось', description: item.name });
+                                    }}
+                                  >
+                                    <Icon name="Download" size={12} className="mr-1" />
+                                    Скачать
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </Card>
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="absolute -top-2 -right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setFolderItems(folderItems.filter(i => i.id !== item.id));
+                            toast({ title: 'Файл удален', description: `${item.name} удален из списка` });
+                          }}
+                        >
+                          <Icon name="X" size={14} />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </TabsContent>
 
@@ -1331,11 +1433,14 @@ const Index = () => {
                   toast({ title: 'Ошибка', description: 'Выберите видео файл', variant: 'destructive' });
                   return;
                 }
+                const fileSizeKb = Math.floor(videoFile.size / 1024);
                 const newItem: FolderItem = {
                   id: Date.now().toString(),
                   name: videoTheme,
                   type: 'video',
                   url: URL.createObjectURL(videoFile),
+                  size: `${fileSizeKb} Кб`,
+                  dateAdded: new Date().toLocaleString('ru-RU')
                 };
                 setFolderItems([...folderItems, newItem]);
                 setVideoTheme('');
