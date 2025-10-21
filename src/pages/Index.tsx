@@ -836,23 +836,44 @@ const Index = () => {
                       onDragStart={() => setDraggedItem({id: item.id, type: 'file'})}
                       onDragEnd={() => setDraggedItem(null)}
                     >
-                      <a
-                        href={item.url || '#'}
-                        target={item.url ? '_blank' : undefined}
-                        rel="noopener noreferrer"
-                        className="block"
-                        onClick={(e) => !item.url && e.preventDefault()}
-                      >
-                        <Card className="overflow-hidden hover:shadow-md transition-all duration-200 cursor-move border-0">
-                          <div className="p-4 flex flex-col items-center text-center">
-                            <div className={`w-16 h-16 bg-gradient-to-br ${typeColors[item.type]} rounded-2xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
-                              <span className="text-3xl">{typeIcons[item.type]}</span>
-                            </div>
-                            <h3 className="font-semibold text-sm mb-1 line-clamp-1">{item.name}</h3>
-                            <p className="text-xs text-muted-foreground capitalize">{item.type === 'image' ? 'Изображение' : item.type === 'video' ? 'Видео' : item.type === 'document' ? 'Документ' : 'Ссылка'}</p>
+                      <Card className="overflow-hidden hover:shadow-md transition-all duration-200 border-0">
+                        <div className="p-4 flex flex-col items-center text-center">
+                          <div className={`w-16 h-16 bg-gradient-to-br ${typeColors[item.type]} rounded-2xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
+                            <span className="text-3xl">{typeIcons[item.type]}</span>
                           </div>
-                        </Card>
-                      </a>
+                          <h3 className="font-semibold text-sm mb-1 line-clamp-1">{item.name}</h3>
+                          <p className="text-xs text-muted-foreground capitalize mb-2">{item.type === 'image' ? 'Изображение' : item.type === 'video' ? 'Видео' : item.type === 'document' ? 'Документ' : 'Ссылка'}</p>
+                          <div className="flex gap-1 w-full">
+                            {item.url && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="flex-1 h-8 text-xs"
+                                  onClick={() => window.open(item.url, '_blank')}
+                                >
+                                  <Icon name="Eye" size={12} className="mr-1" />
+                                  Открыть
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  className="flex-1 h-8 text-xs bg-gradient-to-r from-purple-600 to-purple-700"
+                                  onClick={() => {
+                                    const link = document.createElement('a');
+                                    link.href = item.url!;
+                                    link.download = item.name;
+                                    link.click();
+                                    toast({ title: 'Скачивание началось', description: item.name });
+                                  }}
+                                >
+                                  <Icon name="Download" size={12} className="mr-1" />
+                                  Скачать
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </Card>
                       <Button
                         variant="destructive"
                         size="icon"
