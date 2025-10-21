@@ -763,15 +763,15 @@ const Index = () => {
                     setActiveAddTab('folder');
                     setShowAddContent(true);
                   }} variant="outline" className="border-indigo-600 text-indigo-600 hover:bg-indigo-50">
-                    <Icon name="FolderPlus" size={16} className="mr-2" />
-                    Папка
+                    <Icon name="FolderPlus" size={16} />
+                    <span className="ml-2 hidden sm:inline">Папка</span>
                   </Button>
                   <Button onClick={() => {
                     setActiveAddTab('file');
                     setShowAddContent(true);
                   }} className="bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800">
-                    <Icon name="Plus" size={16} className="mr-2" />
-                    Файл
+                    <Icon name="Plus" size={16} />
+                    <span className="ml-2 hidden sm:inline">Файл</span>
                   </Button>
                 </div>
               </div>
@@ -951,62 +951,70 @@ const Index = () => {
                         onDragStart={() => setDraggedItem({id: item.id, type: 'file'})}
                         onDragEnd={() => setDraggedItem(null)}
                       >
-                        <Card className="overflow-hidden hover:shadow-md transition-all duration-200 border-0">
+                        <Card 
+                          className="overflow-hidden hover:shadow-md transition-all duration-200 border-0 cursor-pointer"
+                          onClick={() => activeView === 'mobile' && setPreviewFile(item)}
+                        >
                           <div className="p-4 flex flex-col items-center text-center">
                             <div className={`w-16 h-16 bg-gradient-to-br ${typeColors[item.type]} rounded-2xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
                               <span className="text-3xl">{typeIcons[item.type]}</span>
                             </div>
                             <h3 className="font-semibold text-sm mb-1 line-clamp-1">{item.name}</h3>
                             <p className="text-xs text-muted-foreground capitalize mb-2">{item.type === 'image' ? 'Изображение' : item.type === 'video' ? 'Видео' : item.type === 'document' ? 'Документ' : 'Ссылка'}</p>
-                            <div className="flex gap-1 w-full">
-                              {item.url && (
-                                <>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="flex-1 h-8 text-xs"
-                                    onClick={() => setPreviewFile(item)}
-                                  >
-                                    <Icon name="Eye" size={12} className="mr-1" />
-                                    Открыть
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    className="flex-1 h-8 text-xs bg-gradient-to-r from-purple-600 to-purple-700"
-                                    onClick={() => {
-                                      try {
-                                        const link = document.createElement('a');
-                                        link.href = item.url!;
-                                        link.download = item.name;
-                                        document.body.appendChild(link);
-                                        link.click();
-                                        document.body.removeChild(link);
-                                        toast({ title: 'Скачивание началось', description: item.name });
-                                      } catch (error) {
-                                        toast({ title: 'Ошибка', description: 'Не удалось скачать файл', variant: 'destructive' });
-                                      }
-                                    }}
-                                  >
-                                    <Icon name="Download" size={12} className="mr-1" />
-                                    Скачать
-                                  </Button>
-                                </>
-                              )}
-                            </div>
+                            {activeView !== 'mobile' && (
+                              <div className="flex gap-1 w-full">
+                                {item.url && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="flex-1 h-8 text-xs"
+                                      onClick={() => setPreviewFile(item)}
+                                    >
+                                      <Icon name="Eye" size={12} className="mr-1" />
+                                      Открыть
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      className="flex-1 h-8 text-xs bg-gradient-to-r from-purple-600 to-purple-700"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        try {
+                                          const link = document.createElement('a');
+                                          link.href = item.url!;
+                                          link.download = item.name;
+                                          document.body.appendChild(link);
+                                          link.click();
+                                          document.body.removeChild(link);
+                                          toast({ title: 'Скачивание началось', description: item.name });
+                                        } catch (error) {
+                                          toast({ title: 'Ошибка', description: 'Не удалось скачать файл', variant: 'destructive' });
+                                        }
+                                      }}
+                                    >
+                                      <Icon name="Download" size={12} className="mr-1" />
+                                      Скачать
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </Card>
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="absolute -top-2 -right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setFolderItems(folderItems.filter(i => i.id !== item.id));
-                            toast({ title: 'Файл удален', description: `${item.name} удален из списка` });
-                          }}
-                        >
-                          <Icon name="X" size={14} />
-                        </Button>
+                        {activeView !== 'mobile' && (
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute -top-2 -right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setFolderItems(folderItems.filter(i => i.id !== item.id));
+                              toast({ title: 'Файл удален', description: `${item.name} удален из списка` });
+                            }}
+                          >
+                            <Icon name="X" size={14} />
+                          </Button>
+                        )}
                       </div>
                     );
                   })}
@@ -1793,15 +1801,16 @@ const Index = () => {
               </div>
             )}
           </div>
-          <div className="flex justify-between items-center pt-4 border-t">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t">
             <div className="text-sm text-muted-foreground space-y-1">
               <p><strong>Тип:</strong> {previewFile?.type === 'image' ? 'Изображение' : previewFile?.type === 'video' ? 'Видео' : previewFile?.type === 'document' ? 'Документ' : 'Ссылка'}</p>
               <p><strong>Размер:</strong> {previewFile?.size || 'Неизвестно'}</p>
               <p><strong>Дата:</strong> {previewFile?.dateAdded || 'Неизвестно'}</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full sm:w-auto">
               {previewFile?.url && previewFile.type !== 'link' && (
                 <Button
+                  className="flex-1 sm:flex-none"
                   onClick={() => {
                     try {
                       const link = document.createElement('a');
@@ -1820,7 +1829,25 @@ const Index = () => {
                   Скачать
                 </Button>
               )}
-              <Button variant="outline" onClick={() => setPreviewFile(null)}>
+              {activeView === 'mobile' && previewFile && (
+                <Button 
+                  variant="destructive"
+                  className="flex-1 sm:flex-none"
+                  onClick={() => {
+                    setFolderItems(folderItems.filter(i => i.id !== previewFile.id));
+                    toast({ title: 'Файл удален', description: `${previewFile.name} удален из списка` });
+                    setPreviewFile(null);
+                  }}
+                >
+                  <Icon name="Trash2" size={16} className="mr-2" />
+                  Удалить
+                </Button>
+              )}
+              <Button 
+                variant="outline" 
+                className="flex-1 sm:flex-none"
+                onClick={() => setPreviewFile(null)}
+              >
                 Закрыть
               </Button>
             </div>
