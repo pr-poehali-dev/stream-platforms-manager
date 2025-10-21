@@ -80,6 +80,7 @@ const Index = () => {
   const [showVideoThemeSelector, setShowVideoThemeSelector] = useState(false);
   const [videoTheme, setVideoTheme] = useState('');
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [previewFile, setPreviewFile] = useState<FolderItem | null>(null);
   const { toast } = useToast();
 
   const [platforms, setPlatforms] = useState<Platform[]>(() => {
@@ -871,7 +872,7 @@ const Index = () => {
                                   size="icon"
                                   variant="ghost"
                                   className="h-8 w-8"
-                                  onClick={() => window.open(item.url, '_blank')}
+                                  onClick={() => setPreviewFile(item)}
                                 >
                                   <Icon name="Eye" size={14} />
                                 </Button>
@@ -951,7 +952,7 @@ const Index = () => {
                                     size="sm"
                                     variant="outline"
                                     className="flex-1 h-8 text-xs"
-                                    onClick={() => window.open(item.url, '_blank')}
+                                    onClick={() => setPreviewFile(item)}
                                   >
                                     <Icon name="Eye" size={12} className="mr-1" />
                                     Открыть
@@ -1715,6 +1716,78 @@ const Index = () => {
           </div>
         </div>
       )}
+
+      <Dialog open={previewFile !== null} onOpenChange={() => setPreviewFile(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>{previewFile?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center p-4">
+            {previewFile?.type === 'image' && previewFile.url && (
+              <img 
+                src={previewFile.url} 
+                alt={previewFile.name}
+                className="max-w-full max-h-[70vh] object-contain rounded-lg"
+              />
+            )}
+            {previewFile?.type === 'video' && previewFile.url && (
+              <video 
+                src={previewFile.url} 
+                controls
+                className="max-w-full max-h-[70vh] rounded-lg"
+              >
+                Ваш браузер не поддерживает видео.
+              </video>
+            )}
+            {previewFile?.type === 'document' && previewFile.url && (
+              <div className="w-full">
+                <iframe
+                  src={previewFile.url}
+                  className="w-full h-[70vh] rounded-lg border"
+                  title={previewFile.name}
+                />
+              </div>
+            )}
+            {previewFile?.type === 'link' && previewFile.url && (
+              <div className="text-center space-y-4">
+                <p className="text-muted-foreground">Это ссылка. Нажмите кнопку ниже, чтобы открыть:</p>
+                <Button asChild>
+                  <a href={previewFile.url} target="_blank" rel="noopener noreferrer">
+                    <Icon name="ExternalLink" size={16} className="mr-2" />
+                    Открыть ссылку
+                  </a>
+                </Button>
+              </div>
+            )}
+          </div>
+          <div className="flex justify-between items-center pt-4 border-t">
+            <div className="text-sm text-muted-foreground space-y-1">
+              <p><strong>Тип:</strong> {previewFile?.type === 'image' ? 'Изображение' : previewFile?.type === 'video' ? 'Видео' : previewFile?.type === 'document' ? 'Документ' : 'Ссылка'}</p>
+              <p><strong>Размер:</strong> {previewFile?.size || 'Неизвестно'}</p>
+              <p><strong>Дата:</strong> {previewFile?.dateAdded || 'Неизвестно'}</p>
+            </div>
+            <div className="flex gap-2">
+              {previewFile?.url && (
+                <Button
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = previewFile.url!;
+                    link.download = previewFile.name;
+                    link.click();
+                    toast({ title: 'Скачивание началось', description: previewFile.name });
+                  }}
+                >
+                  <Icon name="Download" size={16} className="mr-2" />
+                  Скачать
+                </Button>
+              )}
+              <Button variant="outline" onClick={() => setPreviewFile(null)}>
+                Закрыть
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 
