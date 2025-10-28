@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "Login with credentials",
+      "method": "POST",
+      "path": "/?action=login",
+      "body": {
+        "email": "test@example.com",
+        "password": "testpass123"
+      },
+      "expectedStatus": 200
+    }
+  ]
+}

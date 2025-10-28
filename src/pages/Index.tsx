@@ -13,6 +13,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
+import { api, FileItem as ApiFileItem } from '@/lib/api';
+import { FilePreviewDialog } from '@/components/FilePreviewDialog';
 
 interface Platform {
   id: string;
@@ -54,7 +56,11 @@ interface Folder {
 
 const Index = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{ email: string; theme: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ email: string; username: string } | null>(null);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [apiFiles, setApiFiles] = useState<ApiFileItem[]>([]);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+  const [selectedApiFile, setSelectedApiFile] = useState<ApiFileItem | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [showAddContent, setShowAddContent] = useState(false);
   const [activeAddTab, setActiveAddTab] = useState<'platform' | 'game'>('platform');
@@ -133,20 +139,74 @@ const Index = () => {
     localStorage.setItem('streamhub_folder_items', JSON.stringify(folderItems));
   }, [folderItems]);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsAuthenticated(true);
-    setCurrentUser({ email: authForm.email, theme: 'system' });
-    setShowAuth(false);
-    toast({ title: 'Успешный вход!', description: 'Добро пожаловать в StreamHub' });
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadFiles();
+    }
+  }, [isAuthenticated]);
+
+  const checkAuth = async () => {
+    try {
+      const result = await api.verifyToken();
+      if (result.authenticated && result.user) {
+        setIsAuthenticated(true);
+        setCurrentUser({ email: result.user.email, username: result.user.username });
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+    } finally {
+      setIsLoadingAuth(false);
+    }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const loadFiles = async () => {
+    setIsLoadingFiles(true);
+    try {
+      const files = await api.getFiles();
+      setApiFiles(files);
+    } catch (error) {
+      console.error('Failed to load files:', error);
+    } finally {
+      setIsLoadingFiles(false);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsAuthenticated(true);
-    setCurrentUser({ email: authForm.email, theme: 'system' });
-    setShowAuth(false);
-    toast({ title: 'Регистрация успешна!', description: 'Ваш аккаунт создан' });
+    try {
+      const result = await api.login(authForm.email, authForm.password);
+      setIsAuthenticated(true);
+      setCurrentUser({ email: result.user.email, username: result.user.username });
+      setShowAuth(false);
+      toast({ title: 'Успешный вход!', description: 'Добро пожаловать в StreamHub' });
+    } catch (error) {
+      toast({ title: 'Ошибка входа', description: error instanceof Error ? error.message : 'Неверные данные', variant: 'destructive' });
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const result = await api.register(authForm.email, authForm.password, authForm.email.split('@')[0]);
+      setIsAuthenticated(true);
+      setCurrentUser({ email: result.user.email, username: result.user.username });
+      setShowAuth(false);
+      toast({ title: 'Регистрация успешна!', description: 'Ваш аккаунт создан' });
+    } catch (error) {
+      toast({ title: 'Ошибка регистрации', description: error instanceof Error ? error.message : 'Не удалось создать аккаунт', variant: 'destructive' });
+    }
+  };
+
+  const handleLogout = () => {
+    api.clearToken();
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setApiFiles([]);
+    toast({ title: 'Вы вышли из аккаунта' });
   };
 
   const handleAddPlatform = () => {
@@ -218,26 +278,28 @@ const Index = () => {
     setDraggedItem(null);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setUploadedFile(file);
-      
-      const fileType = file.type.startsWith('image/') ? 'image' :
-                       file.type.startsWith('video/') ? 'video' :
-                       file.type.includes('pdf') || file.type.includes('document') ? 'document' : 'link';
+    if (!file) return;
 
-      const newFile: FolderItem = {
-        id: Date.now().toString(),
-        name: file.name,
-        type: fileType,
-        url: URL.createObjectURL(file),
-        size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
-        dateAdded: new Date().toLocaleDateString('ru-RU')
-      };
+    if (!isAuthenticated) {
+      toast({ title: 'Войдите в аккаунт', description: 'Для загрузки файлов необходима авторизация', variant: 'destructive' });
+      setShowAuth(true);
+      return;
+    }
 
-      setFolderItems([...folderItems, newFile]);
-      toast({ title: 'Файл загружен!', description: `${file.name} успешно добавлен` });
+    setUploadedFile(file);
+    toast({ title: 'Загрузка...', description: `Загружаем ${file.name}` });
+
+    try {
+      await api.uploadFile(file);
+      await loadFiles();
+      toast({ title: 'Файл загружен!', description: `${file.name} успешно добавлен в ваш аккаунт` });
+    } catch (error) {
+      toast({ title: 'Ошибка загрузки', description: error instanceof Error ? error.message : 'Не удалось загрузить файл', variant: 'destructive' });
+    } finally {
+      setUploadedFile(null);
+      e.target.value = '';
     }
   };
 
@@ -255,10 +317,20 @@ const Index = () => {
             </Button>
 
             {isAuthenticated ? (
-              <Button variant="ghost" className="text-white hover:bg-white/20">
-                <Icon name="User" size={20} className="mr-2" />
-                {currentUser?.email.split('@')[0]}
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="text-white hover:bg-white/20">
+                    <Icon name="User" size={20} className="mr-2" />
+                    {currentUser?.username || currentUser?.email.split('@')[0]}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <Icon name="LogOut" size={16} className="mr-2" />
+                    Выйти
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Button variant="ghost" className="text-white hover:bg-white/20" onClick={() => setShowAuth(true)}>
                 <Icon name="LogIn" size={20} className="mr-2" />
@@ -375,39 +447,76 @@ const Index = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold">Файлы</h2>
               <div className="flex gap-2">
-                <Input type="file" onChange={handleFileUpload} className="hidden" id="file-upload" />
-                <Button asChild>
+                <Input type="file" onChange={handleFileUpload} className="hidden" id="file-upload" disabled={uploadedFile !== null} />
+                <Button asChild disabled={uploadedFile !== null}>
                   <label htmlFor="file-upload" className="cursor-pointer">
-                    <Icon name="Upload" size={16} className="mr-2" />
-                    Загрузить файл
+                    <Icon name={uploadedFile ? "Loader2" : "Upload"} size={16} className={`mr-2 ${uploadedFile ? 'animate-spin' : ''}`} />
+                    {uploadedFile ? 'Загрузка...' : 'Загрузить файл'}
                   </label>
                 </Button>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {folderItems.filter(f => !f.folderId).map((file) => (
-                <Card
-                  key={file.id}
-                  draggable
-                  onDragStart={() => handleDragStart(file.id, 'file')}
-                  onClick={() => setPreviewFile(file)}
-                  className="group hover:shadow-xl transition-all duration-300 cursor-pointer"
-                >
-                  <div className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-green-700">
-                        <Icon name={file.type === 'image' ? 'Image' : file.type === 'video' ? 'Video' : 'FileText'} size={24} className="text-white" />
+            {isLoadingFiles ? (
+              <div className="flex justify-center items-center py-12">
+                <Icon name="Loader2" size={48} className="animate-spin text-primary" />
+              </div>
+            ) : apiFiles.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="p-4 rounded-full bg-muted inline-block mb-4">
+                  <Icon name="FileQuestion" size={64} className="text-muted-foreground" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Нет файлов</h3>
+                <p className="text-muted-foreground mb-4">
+                  {isAuthenticated ? 'Загрузите первый файл' : 'Войдите в аккаунт для управления файлами'}
+                </p>
+                {!isAuthenticated && (
+                  <Button onClick={() => setShowAuth(true)}>
+                    <Icon name="LogIn" size={16} className="mr-2" />
+                    Войти
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {apiFiles.map((file) => {
+                  const getFileIcon = (mimeType: string) => {
+                    if (mimeType.startsWith('image/')) return 'Image';
+                    if (mimeType.startsWith('video/')) return 'Video';
+                    if (mimeType.includes('pdf')) return 'FileText';
+                    if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'Presentation';
+                    if (mimeType.includes('zip') || mimeType.includes('compressed')) return 'Archive';
+                    return 'File';
+                  };
+
+                  const formatSize = (bytes: number) => {
+                    if (bytes < 1024) return `${bytes} B`;
+                    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+                    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+                  };
+
+                  return (
+                    <Card
+                      key={file.id}
+                      onClick={() => setSelectedApiFile(file)}
+                      className="group hover:shadow-xl transition-all duration-300 cursor-pointer hover:border-primary"
+                    >
+                      <div className="p-6">
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-green-700">
+                            <Icon name={getFileIcon(file.mime_type) as any} size={24} className="text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-bold mb-1 truncate" title={file.original_filename}>{file.original_filename}</h3>
+                            <p className="text-sm text-muted-foreground">{formatSize(file.file_size)}</p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-bold mb-1">{file.name}</h3>
-                        <p className="text-sm text-muted-foreground">{file.size}</p>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="other">
@@ -569,6 +678,12 @@ const Index = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <FilePreviewDialog
+        file={selectedApiFile}
+        isOpen={!!selectedApiFile}
+        onClose={() => setSelectedApiFile(null)}
+      />
 
       {previewFile && (
         <Dialog open={!!previewFile} onOpenChange={() => setPreviewFile(null)}>

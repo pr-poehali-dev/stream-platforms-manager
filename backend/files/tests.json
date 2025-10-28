@@ -1,0 +1,13 @@
+{
+  "tests": [
+    {
+      "name": "List user files",
+      "method": "GET",
+      "path": "/",
+      "headers": {
+        "X-Auth-Token": "mTZwQ-plrKmEyvQIU2xaoIgYTKYFL0J7MP2cVsr_dVA"
+      },
+      "expectedStatus": 200
+    }
+  ]
+}
