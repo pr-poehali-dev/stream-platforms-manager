@@ -96,6 +96,7 @@ const Index = () => {
       { id: 'images', name: 'Изображения', icon: 'Image', color: 'text-green-400', type: 'files' },
       { id: 'documents', name: 'Документы', icon: 'FileText', color: 'text-orange-400', type: 'files' },
       { id: 'videos', name: 'Видео', icon: 'Video', color: 'text-purple-400', type: 'files' },
+      { id: 'presentations', name: 'Презентации', icon: 'Presentation', color: 'text-pink-400', type: 'files' },
     ];
   });
   const [selectedFolder, setSelectedFolder] = useState<string>('all');
