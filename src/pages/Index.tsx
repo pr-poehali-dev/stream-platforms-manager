@@ -86,6 +86,20 @@ const Index = () => {
   const [selectedFileTypes, setSelectedFileTypes] = useState<string[]>(FILE_TYPES.map(t => t.id));
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [showFilterPopover, setShowFilterPopover] = useState(false);
+  const [fileFolders, setFileFolders] = useState<Folder[]>(() => {
+    const saved = localStorage.getItem('streamhub_file_folders');
+    return saved ? JSON.parse(saved) : [
+      { id: 'all', name: 'Все файлы', icon: 'FolderOpen', color: 'text-blue-400', type: 'files' },
+      { id: 'images', name: 'Изображения', icon: 'Image', color: 'text-green-400', type: 'files' },
+      { id: 'documents', name: 'Документы', icon: 'FileText', color: 'text-orange-400', type: 'files' },
+      { id: 'videos', name: 'Видео', icon: 'Video', color: 'text-purple-400', type: 'files' },
+    ];
+  });
+  const [selectedFolder, setSelectedFolder] = useState<string>('all');
+  const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [draggedFile, setDraggedFile] = useState<ApiFileItem | null>(null);
+  const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleFileTypesChange = (types: string[]) => {
@@ -580,6 +594,14 @@ const Index = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold">Файлы</h2>
               <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={() => setShowNewFolderDialog(true)}
+                >
+                  <Icon name="FolderPlus" size={16} />
+                </Button>
+
                 <Popover open={showFilterPopover} onOpenChange={setShowFilterPopover}>
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="icon">
@@ -647,7 +669,43 @@ const Index = () => {
               </div>
             </div>
 
-            <div>
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+              <div className="lg:col-span-1">
+                <Card className="p-4">
+                  <h3 className="font-semibold mb-4 text-sm text-muted-foreground">ПАПКИ</h3>
+                  <div className="space-y-1">
+                    {fileFolders.map((folder) => (
+                      <div
+                        key={folder.id}
+                        onClick={() => setSelectedFolder(folder.id)}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setDragOverFolder(folder.id);
+                        }}
+                        onDragLeave={() => setDragOverFolder(null)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setDragOverFolder(null);
+                          if (draggedFile && folder.id !== 'all') {
+                            addLog(`Файл "${draggedFile.filename}" перемещён в "${folder.name}"`, 'success');
+                          }
+                          setDraggedFile(null);
+                        }}
+                        className={`
+                          flex items-center gap-2 p-2 rounded-md cursor-pointer transition-all
+                          ${selectedFolder === folder.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}
+                          ${dragOverFolder === folder.id ? 'bg-primary/20 border-2 border-primary border-dashed' : ''}
+                        `}
+                      >
+                        <Icon name={folder.icon as any} size={18} className={selectedFolder === folder.id ? '' : folder.color} />
+                        <span className="text-sm font-medium">{folder.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+
+              <div className="lg:col-span-4">
                 {isLoadingFiles ? (
               <div className="flex justify-center items-center py-12">
                 <Icon name="Loader2" size={48} className="animate-spin text-primary" />
@@ -732,8 +790,14 @@ const Index = () => {
                   return (
                     <Card
                       key={file.id}
+                      draggable
+                      onDragStart={() => {
+                        setDraggedFile(file);
+                        addLog(`Перетаскивание файла "${file.original_filename}"`, 'info');
+                      }}
+                      onDragEnd={() => setDraggedFile(null)}
                       onClick={() => setSelectedApiFile(file)}
-                      className="group hover:shadow-xl transition-all duration-300 cursor-pointer hover:border-primary"
+                      className="group hover:shadow-xl transition-all duration-300 cursor-move hover:border-primary"
                     >
                       <div className="p-6">
                         <div className="flex items-start gap-4">
@@ -753,6 +817,7 @@ const Index = () => {
                 </>
               );
             })()}
+              </div>
             </div>
           </TabsContent>
 
@@ -911,6 +976,49 @@ const Index = () => {
             <Button className="w-full">
               <Icon name="Download" size={16} className="mr-2" />
               Скачать
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showNewFolderDialog} onOpenChange={setShowNewFolderDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Создать новую папку</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Название папки</Label>
+              <Input
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                placeholder="Моя папка"
+                autoFocus
+              />
+            </div>
+            <Button 
+              onClick={() => {
+                if (newFolderName.trim()) {
+                  const newFolder: Folder = {
+                    id: Date.now().toString(),
+                    name: newFolderName,
+                    icon: 'Folder',
+                    color: 'text-yellow-400',
+                    type: 'files'
+                  };
+                  const updated = [...fileFolders, newFolder];
+                  setFileFolders(updated);
+                  localStorage.setItem('streamhub_file_folders', JSON.stringify(updated));
+                  addLog(`Создана папка "${newFolderName}"`, 'success');
+                  setNewFolderName('');
+                  setShowNewFolderDialog(false);
+                }
+              }}
+              className="w-full"
+              disabled={!newFolderName.trim()}
+            >
+              <Icon name="FolderPlus" size={16} className="mr-2" />
+              Создать
             </Button>
           </div>
         </DialogContent>
