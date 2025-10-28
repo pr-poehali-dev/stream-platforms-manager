@@ -753,7 +753,6 @@ const Index = () => {
                 </>
               );
             })()}
-              </div>
             </div>
           </TabsContent>
 
