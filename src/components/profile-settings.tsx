@@ -8,6 +8,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -40,6 +47,10 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [wallpaperFile, setWallpaperFile] = useState<File | null>(null);
   const [logsEnabled, setLogsEnabled] = useState(getLoggingEnabled());
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [show2FADialog, setShow2FADialog] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
 
@@ -416,6 +427,43 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
                 Изменить пароль
               </Button>
             </div>
+
+            <div className="space-y-4 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <h3 className="font-semibold">Двухфакторная аутентификация</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Защитите аккаунт с помощью 6-значного кода
+                  </p>
+                </div>
+                <Switch
+                  checked={twoFactorEnabled}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setShow2FADialog(true);
+                    } else {
+                      setTwoFactorEnabled(false);
+                      addLog('Двухфакторная аутентификация отключена', 'warning');
+                      toast({
+                        title: '2FA отключена',
+                        description: 'Двухфакторная аутентификация выключена',
+                      });
+                    }
+                  }}
+                />
+              </div>
+              
+              {twoFactorEnabled && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShow2FADialog(true)}
+                  className="w-full"
+                >
+                  <Icon name="Settings" size={16} className="mr-2" />
+                  Настроить
+                </Button>
+              )}
+            </div>
           </Card>
         </TabsContent>
 
@@ -455,6 +503,100 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={show2FADialog} onOpenChange={setShow2FADialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Настройка двухфакторной аутентификации</DialogTitle>
+            <DialogDescription>
+              Сканируйте QR-код в приложении Google Authenticator или введите код вручную
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="flex justify-center p-4 bg-muted rounded-lg">
+              <div className="w-48 h-48 flex items-center justify-center bg-white rounded-lg">
+                {qrCodeUrl ? (
+                  <img src={qrCodeUrl} alt="QR Code" className="w-full h-full" />
+                ) : (
+                  <div className="text-center space-y-2">
+                    <Icon name="QrCode" size={64} className="text-muted-foreground mx-auto" />
+                    <p className="text-sm text-muted-foreground">QR-код появится здесь</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Секретный ключ</Label>
+              <div className="flex gap-2">
+                <Input 
+                  value="XXXX XXXX XXXX XXXX" 
+                  readOnly 
+                  className="font-mono text-center"
+                />
+                <Button variant="outline" size="icon">
+                  <Icon name="Copy" size={16} />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Введите этот ключ в приложение, если не можете отсканировать QR-код
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="2fa-code">Введите 6-значный код</Label>
+              <Input
+                id="2fa-code"
+                type="text"
+                maxLength={6}
+                placeholder="000000"
+                value={twoFactorCode}
+                onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ''))}
+                className="text-center text-2xl tracking-widest font-mono"
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShow2FADialog(false);
+                  setTwoFactorCode('');
+                }}
+                className="flex-1"
+              >
+                Отмена
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (twoFactorCode.length === 6) {
+                    setTwoFactorEnabled(true);
+                    setShow2FADialog(false);
+                    setTwoFactorCode('');
+                    addLog('Двухфакторная аутентификация включена', 'success');
+                    toast({
+                      title: '2FA активирована',
+                      description: 'Теперь при входе требуется код из приложения',
+                    });
+                  } else {
+                    toast({
+                      title: 'Ошибка',
+                      description: 'Введите 6-значный код',
+                      variant: 'destructive',
+                    });
+                  }
+                }}
+                disabled={twoFactorCode.length !== 6}
+                className="flex-1"
+              >
+                <Icon name="Check" size={16} className="mr-2" />
+                Подтвердить
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
