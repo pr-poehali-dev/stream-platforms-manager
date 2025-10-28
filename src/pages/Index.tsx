@@ -591,8 +591,7 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="files" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-3xl font-bold">Файлы</h2>
+            <div className="flex items-center justify-end">
               <div className="flex gap-2">
                 <Button 
                   variant="outline" 
@@ -672,7 +671,6 @@ const Index = () => {
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
               <div className="lg:col-span-1">
                 <Card className="p-4">
-                  <h3 className="font-semibold mb-4 text-sm text-muted-foreground">ПАПКИ</h3>
                   <div className="space-y-1">
                     {fileFolders.map((folder) => (
                       <div
