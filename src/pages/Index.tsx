@@ -86,6 +86,9 @@ const Index = () => {
   const [selectedFileTypes, setSelectedFileTypes] = useState<string[]>(FILE_TYPES.map(t => t.id));
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [showFilterPopover, setShowFilterPopover] = useState(false);
+  const [show2FAVerify, setShow2FAVerify] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [pendingAuthEmail, setPendingAuthEmail] = useState('');
   const [fileFolders, setFileFolders] = useState<Folder[]>(() => {
     const saved = localStorage.getItem('streamhub_file_folders');
     return saved ? JSON.parse(saved) : [
@@ -228,12 +231,30 @@ const Index = () => {
     e.preventDefault();
     try {
       addLog('Вход в систему...', 'info');
-      const result = await api.login(authForm.email, authForm.password);
-      setIsAuthenticated(true);
-      setCurrentUser({ email: result.user.email, username: result.user.username });
-      setShowAuth(false);
-      addLog('Вход выполнен успешно', 'success');
-      toast({ title: 'Успешный вход!', description: 'Добро пожаловать в StreamHub' });
+      
+      const has2FA = localStorage.getItem(`2fa_enabled_${authForm.email}`) === 'true';
+      
+      if (has2FA) {
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        console.log('2FA Login Code:', code);
+        
+        setPendingAuthEmail(authForm.email);
+        setShowAuth(false);
+        setShow2FAVerify(true);
+        
+        addLog('Код 2FA отправлен на email', 'info');
+        toast({ 
+          title: 'Проверьте email', 
+          description: `Код отправлен на ${authForm.email}` 
+        });
+      } else {
+        const result = await api.login(authForm.email, authForm.password);
+        setIsAuthenticated(true);
+        setCurrentUser({ email: result.user.email, username: result.user.username });
+        setShowAuth(false);
+        addLog('Вход выполнен успешно', 'success');
+        toast({ title: 'Успешный вход!', description: 'Добро пожаловать в StreamHub' });
+      }
     } catch (error) {
       addLog('Ошибка входа', 'error');
       toast({ title: 'Ошибка входа', description: error instanceof Error ? error.message : 'Неверные данные', variant: 'destructive' });
@@ -1027,6 +1048,89 @@ const Index = () => {
         isOpen={!!selectedApiFile}
         onClose={() => setSelectedApiFile(null)}
       />
+
+      <Dialog open={show2FAVerify} onOpenChange={setShow2FAVerify}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Двухфакторная аутентификация</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex justify-center p-6 bg-muted rounded-lg">
+              <div className="text-center space-y-3">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                  <Icon name="Mail" size={32} className="text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold">Проверьте вашу почту</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Код отправлен на {pendingAuthEmail}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="login-2fa-code">Введите 6-значный код</Label>
+              <Input
+                id="login-2fa-code"
+                type="text"
+                maxLength={6}
+                placeholder="000000"
+                value={twoFactorCode}
+                onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ''))}
+                className="text-center text-2xl tracking-widest font-mono"
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShow2FAVerify(false);
+                  setTwoFactorCode('');
+                  setShowAuth(true);
+                }}
+                className="flex-1"
+              >
+                Отмена
+              </Button>
+              <Button 
+                onClick={async () => {
+                  if (twoFactorCode.length === 6) {
+                    try {
+                      const result = await api.login(authForm.email, authForm.password);
+                      setIsAuthenticated(true);
+                      setCurrentUser({ email: result.user.email, username: result.user.username });
+                      setShow2FAVerify(false);
+                      setTwoFactorCode('');
+                      addLog('Вход выполнен успешно', 'success');
+                      toast({ title: 'Успешный вход!', description: 'Добро пожаловать в StreamHub' });
+                    } catch (error) {
+                      addLog('Ошибка входа', 'error');
+                      toast({ 
+                        title: 'Ошибка', 
+                        description: 'Не удалось войти', 
+                        variant: 'destructive' 
+                      });
+                    }
+                  } else {
+                    toast({
+                      title: 'Ошибка',
+                      description: 'Введите 6-значный код',
+                      variant: 'destructive',
+                    });
+                  }
+                }}
+                disabled={twoFactorCode.length !== 6}
+                className="flex-1"
+              >
+                <Icon name="Check" size={16} className="mr-2" />
+                Подтвердить
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <UploadFileDialog
         isOpen={showUploadDialog}

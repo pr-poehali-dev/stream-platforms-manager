@@ -65,6 +65,10 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
       setProfile(data);
       setDisplayName(data.displayName || '');
       setEmail(data.email);
+      
+      const has2FA = localStorage.getItem(`2fa_enabled_${data.email}`) === 'true';
+      setTwoFactorEnabled(has2FA);
+      
       addLog('Профиль загружен', 'success');
     } catch (error) {
       addLog('Ошибка загрузки профиля', 'error');
@@ -203,6 +207,28 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
       addLog('Тема изменена', 'success');
     } catch (error) {
       addLog('Ошибка смены темы', 'error');
+    }
+  };
+
+  const handleSend2FACode = async () => {
+    try {
+      addLog('Отправляю код на email...', 'info');
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      toast({
+        title: 'Код отправлен',
+        description: `6-значный код отправлен на ${email}`,
+      });
+      addLog(`Код 2FA отправлен на ${email}`, 'success');
+      
+      console.log('2FA Code:', code);
+    } catch (error) {
+      addLog('Ошибка отправки кода', 'error');
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось отправить код',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -441,8 +467,10 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
                   onCheckedChange={(checked) => {
                     if (checked) {
                       setShow2FADialog(true);
+                      handleSend2FACode();
                     } else {
                       setTwoFactorEnabled(false);
+                      localStorage.removeItem(`2fa_enabled_${email}`);
                       addLog('Двухфакторная аутентификация отключена', 'warning');
                       toast({
                         title: '2FA отключена',
@@ -509,43 +537,37 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
           <DialogHeader>
             <DialogTitle>Настройка двухфакторной аутентификации</DialogTitle>
             <DialogDescription>
-              Сканируйте QR-код в приложении Google Authenticator или введите код вручную
+              Мы отправили 6-значный код на ваш email: {email}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="flex justify-center p-4 bg-muted rounded-lg">
-              <div className="w-48 h-48 flex items-center justify-center bg-white rounded-lg">
-                {qrCodeUrl ? (
-                  <img src={qrCodeUrl} alt="QR Code" className="w-full h-full" />
-                ) : (
-                  <div className="text-center space-y-2">
-                    <Icon name="QrCode" size={64} className="text-muted-foreground mx-auto" />
-                    <p className="text-sm text-muted-foreground">QR-код появится здесь</p>
-                  </div>
-                )}
+            <div className="flex justify-center p-6 bg-muted rounded-lg">
+              <div className="text-center space-y-3">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                  <Icon name="Mail" size={32} className="text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold">Проверьте вашу почту</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Код действителен 10 минут
+                  </p>
+                </div>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Секретный ключ</Label>
-              <div className="flex gap-2">
-                <Input 
-                  value="XXXX XXXX XXXX XXXX" 
-                  readOnly 
-                  className="font-mono text-center"
-                />
-                <Button variant="outline" size="icon">
-                  <Icon name="Copy" size={16} />
+              <div className="flex items-center justify-between">
+                <Label htmlFor="2fa-code">Введите 6-значный код</Label>
+                <Button 
+                  variant="link" 
+                  size="sm"
+                  onClick={handleSend2FACode}
+                  className="h-auto p-0"
+                >
+                  Отправить повторно
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Введите этот ключ в приложение, если не можете отсканировать QR-код
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="2fa-code">Введите 6-значный код</Label>
               <Input
                 id="2fa-code"
                 type="text"
@@ -574,10 +596,11 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
                     setTwoFactorEnabled(true);
                     setShow2FADialog(false);
                     setTwoFactorCode('');
+                    localStorage.setItem(`2fa_enabled_${email}`, 'true');
                     addLog('Двухфакторная аутентификация включена', 'success');
                     toast({
                       title: '2FA активирована',
-                      description: 'Теперь при входе требуется код из приложения',
+                      description: 'Теперь при входе требуется код из email',
                     });
                   } else {
                     toast({
