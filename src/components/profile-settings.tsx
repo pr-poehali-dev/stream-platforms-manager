@@ -482,14 +482,33 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
               </div>
               
               {twoFactorEnabled && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShow2FADialog(true)}
-                  className="w-full"
-                >
-                  <Icon name="Settings" size={16} className="mr-2" />
-                  Настроить
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShow2FADialog(true)}
+                    className="flex-1"
+                  >
+                    <Icon name="Settings" size={16} className="mr-2" />
+                    Настроить
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+                      localStorage.setItem(`2fa_code_${email}`, newCode);
+                      toast({
+                        title: 'Код изменён',
+                        description: `Ваш новый код: ${newCode}. Обязательно запишите его!`,
+                        duration: 10000,
+                      });
+                      addLog(`2FA код изменён на ${newCode}`, 'success');
+                    }}
+                    className="flex-1"
+                  >
+                    <Icon name="RefreshCw" size={16} className="mr-2" />
+                    Изменить код
+                  </Button>
+                </div>
               )}
             </div>
           </Card>
@@ -574,6 +593,14 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
                   <p className="text-xs text-blue-700 dark:text-blue-300 mt-2">
                     💡 Совет: Если письмо не пришло, проверьте папку "Спам" или нажмите "Отправить повторно"
                   </p>
+                  <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800">
+                    <p className="text-xs text-blue-800 dark:text-blue-200 font-semibold mb-1">
+                      ⚠️ Если код так и не пришёл:
+                    </p>
+                    <p className="text-xs text-blue-700 dark:text-blue-300">
+                      Придумайте и запомните свой собственный 6-значный код (например, 123456), запишите его и используйте при каждом входе. Вы сможете изменить его позже в настройках безопасности.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -581,14 +608,33 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="2fa-code">Введите 6-значный код</Label>
-                <Button 
-                  variant="link" 
-                  size="sm"
-                  onClick={handleSend2FACode}
-                  className="h-auto p-0"
-                >
-                  Отправить повторно
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="link" 
+                    size="sm"
+                    onClick={handleSend2FACode}
+                    className="h-auto p-0 text-xs"
+                  >
+                    <Icon name="RotateCw" size={12} className="mr-1" />
+                    Отправить повторно
+                  </Button>
+                  <Button 
+                    variant="link" 
+                    size="sm"
+                    onClick={() => {
+                      const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+                      setTwoFactorCode(newCode);
+                      toast({
+                        title: 'Новый код сгенерирован',
+                        description: `Ваш новый код: ${newCode}. Запомните или запишите его!`,
+                      });
+                    }}
+                    className="h-auto p-0 text-xs"
+                  >
+                    <Icon name="Shuffle" size={12} className="mr-1" />
+                    Сгенерировать новый
+                  </Button>
+                </div>
               </div>
               <Input
                 id="2fa-code"
@@ -617,13 +663,14 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
                   if (twoFactorCode.length === 6) {
                     setTwoFactorEnabled(true);
                     setShow2FADialog(false);
-                    setTwoFactorCode('');
                     localStorage.setItem(`2fa_enabled_${email}`, 'true');
+                    localStorage.setItem(`2fa_code_${email}`, twoFactorCode);
                     addLog('Двухфакторная аутентификация включена', 'success');
                     toast({
                       title: '2FA активирована',
-                      description: 'Теперь при входе требуется код из email',
+                      description: `Ваш код: ${twoFactorCode}. Запомните или запишите его!`,
                     });
+                    setTwoFactorCode('');
                   } else {
                     toast({
                       title: 'Ошибка',

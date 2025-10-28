@@ -1098,20 +1098,32 @@ const Index = () => {
               <Button 
                 onClick={async () => {
                   if (twoFactorCode.length === 6) {
-                    try {
-                      const result = await api.login(authForm.email, authForm.password);
-                      setIsAuthenticated(true);
-                      setCurrentUser({ email: result.user.email, username: result.user.username });
-                      setShow2FAVerify(false);
-                      setTwoFactorCode('');
-                      addLog('Вход выполнен успешно', 'success');
-                      toast({ title: 'Успешный вход!', description: 'Добро пожаловать в StreamHub' });
-                    } catch (error) {
-                      addLog('Ошибка входа', 'error');
-                      toast({ 
-                        title: 'Ошибка', 
-                        description: 'Не удалось войти', 
-                        variant: 'destructive' 
+                    const savedCode = localStorage.getItem(`2fa_code_${pendingAuthEmail}`);
+                    
+                    if (savedCode && savedCode === twoFactorCode) {
+                      try {
+                        const result = await api.login(authForm.email, authForm.password);
+                        setIsAuthenticated(true);
+                        setCurrentUser({ email: result.user.email, username: result.user.username });
+                        setShow2FAVerify(false);
+                        setTwoFactorCode('');
+                        setPendingAuthEmail('');
+                        addLog('Вход выполнен успешно', 'success');
+                        toast({ title: 'Успешный вход!', description: 'Добро пожаловать в StreamHub' });
+                      } catch (error) {
+                        addLog('Ошибка входа', 'error');
+                        toast({ 
+                          title: 'Ошибка', 
+                          description: 'Не удалось войти', 
+                          variant: 'destructive' 
+                        });
+                      }
+                    } else {
+                      addLog('Неверный 2FA код', 'error');
+                      toast({
+                        title: 'Неверный код',
+                        description: 'Введённый код не совпадает с вашим 2FA кодом',
+                        variant: 'destructive',
                       });
                     }
                   } else {
