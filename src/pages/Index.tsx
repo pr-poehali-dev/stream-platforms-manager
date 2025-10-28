@@ -18,6 +18,7 @@ import { FilePreviewDialog } from '@/components/FilePreviewDialog';
 import { ProfileSettings } from '@/components/profile-settings';
 import { ActivityLog, addLog, getLoggingEnabled } from '@/components/activity-log';
 import { FileTypeFilter, FILE_TYPES } from '@/components/file-type-filter';
+import { UploadFileDialog } from '@/components/upload-file-dialog';
 
 interface Platform {
   id: string;
@@ -76,6 +77,7 @@ const Index = () => {
   const [previewFile, setPreviewFile] = useState<FolderItem | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const [selectedFileTypes, setSelectedFileTypes] = useState<string[]>(FILE_TYPES.map(t => t.id));
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
   const { toast } = useToast();
 
   const handleFileTypesChange = (types: string[]) => {
@@ -362,13 +364,13 @@ const Index = () => {
     toast({ title: 'Удалено', description: `${name} удалена` });
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileUpload = async (file: File) => {
     if (!file) return;
 
     if (!isAuthenticated) {
       toast({ title: 'Войдите в аккаунт', description: 'Для загрузки файлов необходима авторизация', variant: 'destructive' });
       setShowAuth(true);
+      setShowUploadDialog(false);
       return;
     }
 
@@ -381,12 +383,12 @@ const Index = () => {
       await loadFiles();
       addLog(`Файл ${file.name} загружен`, 'success');
       toast({ title: 'Файл загружен!', description: `${file.name} успешно добавлен в ваш аккаунт` });
+      setShowUploadDialog(false);
     } catch (error) {
       addLog(`Ошибка загрузки ${file.name}`, 'error');
       toast({ title: 'Ошибка загрузки', description: error instanceof Error ? error.message : 'Не удалось загрузить файл', variant: 'destructive' });
     } finally {
       setUploadedFile(null);
-      e.target.value = '';
     }
   };
 
@@ -570,12 +572,12 @@ const Index = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold">Файлы</h2>
               <div className="flex gap-2">
-                <Input type="file" onChange={handleFileUpload} className="hidden" id="file-upload" disabled={uploadedFile !== null} />
-                <Button asChild disabled={uploadedFile !== null}>
-                  <label htmlFor="file-upload" className="cursor-pointer">
-                    <Icon name={uploadedFile ? "Loader2" : "Upload"} size={16} className={`mr-2 ${uploadedFile ? 'animate-spin' : ''}`} />
-                    {uploadedFile ? 'Загрузка...' : 'Загрузить файл'}
-                  </label>
+                <Button 
+                  onClick={() => setShowUploadDialog(true)} 
+                  disabled={uploadedFile !== null}
+                >
+                  <Icon name={uploadedFile ? "Loader2" : "Upload"} size={16} className={`mr-2 ${uploadedFile ? 'animate-spin' : ''}`} />
+                  {uploadedFile ? 'Загрузка...' : 'Загрузить файл'}
                 </Button>
               </div>
             </div>
@@ -862,6 +864,13 @@ const Index = () => {
         file={selectedApiFile}
         isOpen={!!selectedApiFile}
         onClose={() => setSelectedApiFile(null)}
+      />
+
+      <UploadFileDialog
+        isOpen={showUploadDialog}
+        onClose={() => setShowUploadDialog(false)}
+        onFileSelected={handleFileUpload}
+        isUploading={uploadedFile !== null}
       />
 
       {previewFile && (
