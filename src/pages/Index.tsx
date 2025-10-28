@@ -11,13 +11,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Checkbox } from '@/components/ui/checkbox';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 import { api, FileItem as ApiFileItem } from '@/lib/api';
 import { FilePreviewDialog } from '@/components/FilePreviewDialog';
 import { ProfileSettings } from '@/components/profile-settings';
 import { ActivityLog, addLog, getLoggingEnabled } from '@/components/activity-log';
-import { FileTypeFilter, FILE_TYPES } from '@/components/file-type-filter';
+import { FILE_TYPES } from '@/components/file-type-filter';
 import { UploadFileDialog } from '@/components/upload-file-dialog';
 
 interface Platform {
@@ -78,6 +85,7 @@ const Index = () => {
   const [showProfile, setShowProfile] = useState(false);
   const [selectedFileTypes, setSelectedFileTypes] = useState<string[]>(FILE_TYPES.map(t => t.id));
   const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [showFilterPopover, setShowFilterPopover] = useState(false);
   const { toast } = useToast();
 
   const handleFileTypesChange = (types: string[]) => {
@@ -572,6 +580,63 @@ const Index = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold">Файлы</h2>
               <div className="flex gap-2">
+                <Popover open={showFilterPopover} onOpenChange={setShowFilterPopover}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <Icon name="Filter" size={16} />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72" align="end">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold">Фильтр по типу файлов</h4>
+                        <button
+                          onClick={() => {
+                            const newTypes = selectedFileTypes.length === FILE_TYPES.length ? [] : FILE_TYPES.map(t => t.id);
+                            handleFileTypesChange(newTypes);
+                          }}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          {selectedFileTypes.length === FILE_TYPES.length ? 'Снять все' : 'Выбрать все'}
+                        </button>
+                      </div>
+
+                      <ScrollArea className="h-[400px] pr-3">
+                        <div className="space-y-2">
+                          {FILE_TYPES.map((type) => (
+                            <div
+                              key={type.id}
+                              className="flex items-center space-x-2 p-2 rounded-md hover:bg-muted/50"
+                            >
+                              <Checkbox
+                                id={`filter-type-${type.id}`}
+                                checked={selectedFileTypes.includes(type.id)}
+                                onCheckedChange={() => {
+                                  const newTypes = selectedFileTypes.includes(type.id)
+                                    ? selectedFileTypes.filter(id => id !== type.id)
+                                    : [...selectedFileTypes, type.id];
+                                  handleFileTypesChange(newTypes);
+                                }}
+                              />
+                              <Label
+                                htmlFor={`filter-type-${type.id}`}
+                                className="flex items-center gap-2 cursor-pointer flex-1"
+                              >
+                                <Icon name={type.icon as any} size={18} className={type.color} />
+                                <span className="text-sm">{type.name}</span>
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+
+                      <p className="text-xs text-muted-foreground">
+                        {selectedFileTypes.length} из {FILE_TYPES.length}
+                      </p>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
                 <Button 
                   onClick={() => setShowUploadDialog(true)} 
                   disabled={uploadedFile !== null}
@@ -582,15 +647,7 @@ const Index = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              <div className="lg:col-span-1">
-                <FileTypeFilter
-                  selectedTypes={selectedFileTypes}
-                  onTypesChange={handleFileTypesChange}
-                />
-              </div>
-
-              <div className="lg:col-span-3">
+            <div>
                 {isLoadingFiles ? (
               <div className="flex justify-center items-center py-12">
                 <Icon name="Loader2" size={48} className="animate-spin text-primary" />
