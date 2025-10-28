@@ -1,0 +1,28 @@
+{
+  "tests": [
+    {
+      "name": "List user files",
+      "method": "GET",
+      "path": "/",
+      "headers": {
+        "X-Auth-Token": "mTZwQ-plrKmEyvQIU2xaoIgYTKYFL0J7MP2cVsr_dVA"
+      },
+      "expectedStatus": 200
+    },
+    {
+      "name": "Upload file",
+      "method": "POST",
+      "path": "/",
+      "headers": {
+        "X-Auth-Token": "mTZwQ-plrKmEyvQIU2xaoIgYTKYFL0J7MP2cVsr_dVA"
+      },
+      "body": {
+        "filename": "test.txt",
+        "content": "SGVsbG8gV29ybGQ=",
+        "file_type": "text/plain",
+        "mime_type": "text/plain"
+      },
+      "expectedStatus": 201
+    }
+  ]
+}
