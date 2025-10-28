@@ -556,6 +556,28 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
               </div>
             </div>
 
+            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <div className="flex gap-3">
+                <div className="flex-shrink-0">
+                  <Icon name="Info" size={20} className="text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="space-y-2 text-sm">
+                  <p className="font-semibold text-blue-900 dark:text-blue-100">
+                    Как запомнить код двухфакторной аутентификации:
+                  </p>
+                  <ol className="list-decimal list-inside space-y-1 text-blue-800 dark:text-blue-200">
+                    <li>Откройте письмо с кодом в вашем почтовом ящике</li>
+                    <li>Скопируйте 6-значный код из письма</li>
+                    <li>Вставьте код в поле ниже</li>
+                    <li>Нажмите "Подтвердить" для активации 2FA</li>
+                  </ol>
+                  <p className="text-xs text-blue-700 dark:text-blue-300 mt-2">
+                    💡 Совет: Если письмо не пришло, проверьте папку "Спам" или нажмите "Отправить повторно"
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="2fa-code">Введите 6-значный код</Label>
