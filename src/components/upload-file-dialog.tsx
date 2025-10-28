@@ -4,6 +4,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import Icon from '@/components/ui/icon';
 import { FILE_TYPES, FileType } from './file-type-filter';
 
@@ -17,6 +22,7 @@ interface UploadFileDialogProps {
 export function UploadFileDialog({ isOpen, onClose, onFileSelected, isUploading }: UploadFileDialogProps) {
   const [selectedTypes, setSelectedTypes] = useState<string[]>(FILE_TYPES.map(t => t.id));
   const [dragActive, setDragActive] = useState(false);
+  const [showFilterPopover, setShowFilterPopover] = useState(false);
 
   const handleToggleType = (typeId: string) => {
     if (selectedTypes.includes(typeId)) {
@@ -80,130 +86,135 @@ export function UploadFileDialog({ isOpen, onClose, onFileSelected, isUploading 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>Загрузить файл</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>Загрузить файл</DialogTitle>
+            
+            <Popover open={showFilterPopover} onOpenChange={setShowFilterPopover}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="icon" disabled={isUploading}>
+                  <Icon name="Filter" size={16} />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64" align="end">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-sm">Форматы</h4>
+                    <button
+                      onClick={handleSelectAll}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      {selectedTypes.length === FILE_TYPES.length ? 'Снять все' : 'Все'}
+                    </button>
+                  </div>
+
+                  <ScrollArea className="h-[300px] pr-3">
+                    <div className="space-y-2">
+                      {FILE_TYPES.filter(t => t.id !== 'folder' && t.id !== 'shortcut').map((type) => (
+                        <div
+                          key={type.id}
+                          className="flex items-center space-x-2 p-1.5 rounded-md hover:bg-muted/50"
+                        >
+                          <Checkbox
+                            id={`type-${type.id}`}
+                            checked={selectedTypes.includes(type.id)}
+                            onCheckedChange={() => handleToggleType(type.id)}
+                          />
+                          <Label
+                            htmlFor={`type-${type.id}`}
+                            className="flex items-center gap-2 cursor-pointer flex-1"
+                          >
+                            <Icon name={type.icon as any} size={16} className={type.color} />
+                            <span className="text-sm">{type.name}</span>
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-sm">Допустимые форматы</h3>
-              <button
-                onClick={handleSelectAll}
-                className="text-xs text-primary hover:underline"
-                disabled={isUploading}
-              >
-                {selectedTypes.length === FILE_TYPES.length ? 'Снять все' : 'Выбрать все'}
-              </button>
-            </div>
+        <div className="space-y-4 mt-4">
+          <div
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            className={`
+              border-2 border-dashed rounded-lg p-12 text-center transition-all
+              ${dragActive ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'}
+              ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-primary hover:bg-primary/5'}
+            `}
+          >
+            <input
+              type="file"
+              onChange={handleFileChange}
+              className="hidden"
+              id="file-upload-dialog"
+              accept={getAcceptString()}
+              disabled={isUploading || selectedTypes.length === 0}
+            />
+            
+            <label
+              htmlFor="file-upload-dialog"
+              className={`cursor-pointer ${isUploading || selectedTypes.length === 0 ? 'cursor-not-allowed' : ''}`}
+            >
+              <div className="flex flex-col items-center gap-4">
+                {isUploading ? (
+                  <Icon name="Loader2" size={56} className="text-primary animate-spin" />
+                ) : (
+                  <Icon name="Upload" size={56} className="text-muted-foreground" />
+                )}
+                
+                <div>
+                  <p className="font-semibold text-lg mb-1">
+                    {isUploading ? 'Загрузка...' : 'Перетащите файл сюда'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    или нажмите для выбора
+                  </p>
+                </div>
 
-            <ScrollArea className="h-[400px] pr-4">
-              <div className="space-y-2">
-                {FILE_TYPES.filter(t => t.id !== 'folder' && t.id !== 'shortcut').map((type) => (
-                  <div
-                    key={type.id}
-                    className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors"
-                  >
-                    <Checkbox
-                      id={`upload-type-${type.id}`}
-                      checked={selectedTypes.includes(type.id)}
-                      onCheckedChange={() => handleToggleType(type.id)}
-                      disabled={isUploading}
-                    />
-                    <Label
-                      htmlFor={`upload-type-${type.id}`}
-                      className="flex items-center gap-2 cursor-pointer flex-1"
-                    >
-                      <Icon name={type.icon as any} size={18} className={type.color} />
-                      <span className="text-sm">{type.name}</span>
-                    </Label>
+                {selectedTypes.length > 0 && !isUploading && (
+                  <div className="mt-2 flex flex-wrap gap-1 justify-center">
+                    {FILE_TYPES.filter(t => selectedTypes.includes(t.id) && t.extensions.length > 0)
+                      .slice(0, 6)
+                      .map(type => (
+                        <span key={type.id} className="text-xs bg-muted px-2 py-1 rounded">
+                          {type.extensions[0]}
+                        </span>
+                      ))}
+                    {selectedTypes.length > 6 && (
+                      <span className="text-xs text-muted-foreground">
+                        +{selectedTypes.length - 6}
+                      </span>
+                    )}
                   </div>
-                ))}
+                )}
               </div>
-            </ScrollArea>
-
-            <p className="text-xs text-muted-foreground">
-              {selectedTypes.length === 0 
-                ? 'Выберите хотя бы один формат для загрузки'
-                : `Разрешено ${selectedTypes.length} типов файлов`
-              }
-            </p>
+            </label>
           </div>
 
-          <div className="space-y-4">
-            <h3 className="font-semibold text-sm">Загрузить файл</h3>
-            
-            <div
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-              className={`
-                border-2 border-dashed rounded-lg p-8 text-center transition-all
-                ${dragActive ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'}
-                ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-primary hover:bg-primary/5'}
-              `}
+          <p className="text-xs text-center text-muted-foreground">
+            {selectedTypes.length === 0 
+              ? 'Выберите форматы через фильтр'
+              : `Разрешено ${selectedTypes.length} типов файлов`
+            }
+          </p>
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              disabled={isUploading}
+              className="flex-1"
             >
-              <input
-                type="file"
-                onChange={handleFileChange}
-                className="hidden"
-                id="file-upload-dialog"
-                accept={getAcceptString()}
-                disabled={isUploading || selectedTypes.length === 0}
-              />
-              
-              <label
-                htmlFor="file-upload-dialog"
-                className={`cursor-pointer ${isUploading || selectedTypes.length === 0 ? 'cursor-not-allowed' : ''}`}
-              >
-                <div className="flex flex-col items-center gap-3">
-                  {isUploading ? (
-                    <Icon name="Loader2" size={48} className="text-primary animate-spin" />
-                  ) : (
-                    <Icon name="Upload" size={48} className="text-muted-foreground" />
-                  )}
-                  
-                  <div>
-                    <p className="font-semibold mb-1">
-                      {isUploading ? 'Загрузка...' : 'Перетащите файл сюда'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      или нажмите для выбора
-                    </p>
-                  </div>
-
-                  {selectedTypes.length > 0 && !isUploading && (
-                    <div className="mt-2 flex flex-wrap gap-1 justify-center max-w-[250px]">
-                      {FILE_TYPES.filter(t => selectedTypes.includes(t.id) && t.extensions.length > 0)
-                        .slice(0, 5)
-                        .map(type => (
-                          <span key={type.id} className="text-xs bg-muted px-2 py-1 rounded">
-                            {type.extensions[0]}
-                          </span>
-                        ))}
-                      {selectedTypes.length > 5 && (
-                        <span className="text-xs text-muted-foreground">
-                          +{selectedTypes.length - 5} ещё
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </label>
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={onClose}
-                disabled={isUploading}
-                className="flex-1"
-              >
-                Отмена
-              </Button>
-            </div>
+              Отмена
+            </Button>
           </div>
         </div>
       </DialogContent>
