@@ -17,6 +17,7 @@ import { api, FileItem as ApiFileItem } from '@/lib/api';
 import { FilePreviewDialog } from '@/components/FilePreviewDialog';
 import { ProfileSettings } from '@/components/profile-settings';
 import { ActivityLog, addLog, getLoggingEnabled } from '@/components/activity-log';
+import { FileTypeFilter, FILE_TYPES } from '@/components/file-type-filter';
 
 interface Platform {
   id: string;
@@ -74,7 +75,21 @@ const Index = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [previewFile, setPreviewFile] = useState<FolderItem | null>(null);
   const [showProfile, setShowProfile] = useState(false);
+  const [selectedFileTypes, setSelectedFileTypes] = useState<string[]>(FILE_TYPES.map(t => t.id));
   const { toast } = useToast();
+
+  const handleFileTypesChange = (types: string[]) => {
+    setSelectedFileTypes(types);
+    const count = types.length;
+    const total = FILE_TYPES.length;
+    if (count === 0) {
+      addLog('Все типы файлов скрыты', 'warning');
+    } else if (count === total) {
+      addLog('Показаны все типы файлов', 'info');
+    } else {
+      addLog(`Фильтр: показано ${count} из ${total} типов`, 'info');
+    }
+  };
 
   const [platforms, setPlatforms] = useState<Platform[]>(() => {
     const saved = localStorage.getItem('streamhub_platforms');
@@ -565,7 +580,16 @@ const Index = () => {
               </div>
             </div>
 
-            {isLoadingFiles ? (
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <div className="lg:col-span-1">
+                <FileTypeFilter
+                  selectedTypes={selectedFileTypes}
+                  onTypesChange={handleFileTypesChange}
+                />
+              </div>
+
+              <div className="lg:col-span-3">
+                {isLoadingFiles ? (
               <div className="flex justify-center items-center py-12">
                 <Icon name="Loader2" size={48} className="animate-spin text-primary" />
               </div>
@@ -585,14 +609,57 @@ const Index = () => {
                   </Button>
                 )}
               </div>
-            ) : (
+            ) : (() => {
+              const filteredFiles = apiFiles.filter((file) => {
+                const getFileTypeId = (mimeType: string, filename: string) => {
+                  const ext = '.' + filename.split('.').pop()?.toLowerCase();
+                  
+                  if (mimeType.startsWith('image/')) return 'image';
+                  if (mimeType.startsWith('video/')) return 'video';
+                  if (mimeType.startsWith('audio/')) return 'audio';
+                  if (mimeType.includes('pdf')) return 'pdf';
+                  if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'powerpoint';
+                  if (mimeType.includes('word') || mimeType.includes('document')) return 'word';
+                  if (mimeType.includes('excel') || mimeType.includes('spreadsheet') || ext === '.csv') return 'excel';
+                  if (mimeType.includes('zip') || mimeType.includes('compressed') || mimeType.includes('archive')) return 'zip';
+                  if (ext === '.accdb' || ext === '.mdb') return 'access';
+                  if (ext === '.pub') return 'publisher';
+                  if (ext === '.txt') return 'text';
+                  
+                  return 'text';
+                };
+                
+                const fileTypeId = getFileTypeId(file.mime_type, file.original_filename);
+                return selectedFileTypes.includes(fileTypeId);
+              });
+
+              return filteredFiles.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="p-4 rounded-full bg-muted inline-block mb-4">
+                    <Icon name="Filter" size={64} className="text-muted-foreground" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">Файлы скрыты фильтром</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Все файлы отфильтрованы. Измените настройки фильтра слева.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm text-muted-foreground">
+                      Показано файлов: {filteredFiles.length} из {apiFiles.length}
+                    </p>
+                  </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {apiFiles.map((file) => {
+                {filteredFiles.map((file) => {
                   const getFileIcon = (mimeType: string) => {
                     if (mimeType.startsWith('image/')) return 'Image';
                     if (mimeType.startsWith('video/')) return 'Video';
+                    if (mimeType.startsWith('audio/')) return 'Music';
                     if (mimeType.includes('pdf')) return 'FileText';
                     if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'Presentation';
+                    if (mimeType.includes('word')) return 'FileText';
+                    if (mimeType.includes('excel')) return 'Sheet';
                     if (mimeType.includes('zip') || mimeType.includes('compressed')) return 'Archive';
                     return 'File';
                   };
@@ -624,7 +691,11 @@ const Index = () => {
                   );
                 })}
               </div>
-            )}
+                </>
+              );
+            })()}
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="other">
