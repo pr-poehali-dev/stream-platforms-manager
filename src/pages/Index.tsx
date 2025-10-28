@@ -142,12 +142,75 @@ const Index = () => {
     },
     {
       id: '3',
+      name: 'Steam',
+      description: 'Крупнейшая цифровая платформа для PC игр',
+      type: 'streaming',
+      icon: 'Gamepad2',
+      gradient: 'from-blue-500 to-blue-700',
+      url: 'https://store.steampowered.com'
+    },
+    {
+      id: '4',
       name: 'VK Play Live',
       description: 'Российская платформа для стриминга игр',
       type: 'streaming',
       icon: 'Rocket',
       gradient: 'from-pink-500 to-pink-700',
       url: 'https://vkplay.live'
+    },
+    {
+      id: '5',
+      name: 'Discord',
+      description: 'Общение с геймерами и стримерами',
+      type: 'streaming',
+      icon: 'MessageCircle',
+      gradient: 'from-green-500 to-green-700',
+      url: 'https://discord.com'
+    },
+    {
+      id: '6',
+      name: 'Boosty',
+      description: 'Платформа для монетизации контента',
+      type: 'streaming',
+      icon: 'Star',
+      gradient: 'from-green-500 to-green-700',
+      url: 'https://boosty.to'
+    },
+    {
+      id: '7',
+      name: 'VPN',
+      description: 'Бесплатный VPN для безопасного доступа',
+      type: 'streaming',
+      icon: 'Shield',
+      gradient: 'from-green-500 to-green-700',
+      url: 'https://protonvpn.com'
+    },
+    {
+      id: '8',
+      name: 'Google',
+      description: 'Самый популярный поисковик в мире',
+      type: 'streaming',
+      icon: 'Search',
+      gradient: 'from-blue-500 to-blue-700',
+      url: 'https://google.com'
+    },
+    {
+      id: '9',
+      name: 'Яндекс',
+      description: 'Ведущий российский поисковик',
+      type: 'streaming',
+      icon: 'Search',
+      gradient: 'from-red-500 to-red-700',
+      url: 'https://yandex.ru'
+    },
+    {
+      id: '10',
+      name: 'Bing',
+      description: 'Поисковая система Microsoft',
+      type: 'streaming',
+      icon: 'Search',
+      gradient: 'from-cyan-500 to-cyan-700',
+      url: 'https://bing.com'
     }];
   });
 
