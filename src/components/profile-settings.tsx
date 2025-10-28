@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Switch } from '@/components/ui/switch';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,7 +22,7 @@ import Icon from '@/components/ui/icon';
 import { useTheme } from '@/components/theme-provider';
 import { api, UserProfile } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
-import { addLog } from '@/components/activity-log';
+import { addLog, setLoggingEnabled, getLoggingEnabled } from '@/components/activity-log';
 
 interface ProfileSettingsProps {
   onLogout: () => void;
@@ -38,6 +39,7 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
   const [confirmPassword, setConfirmPassword] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [wallpaperFile, setWallpaperFile] = useState<File | null>(null);
+  const [logsEnabled, setLogsEnabled] = useState(getLoggingEnabled());
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
 
@@ -311,6 +313,28 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
                   </Label>
                 </div>
               </RadioGroup>
+            </div>
+
+            <div className="flex items-center justify-between pt-4 border-t">
+              <div className="space-y-1">
+                <Label htmlFor="activity-logs" className="text-base">Журнал активности</Label>
+                <p className="text-sm text-muted-foreground">
+                  Показывать живые логи действий в правом нижнем углу
+                </p>
+              </div>
+              <Switch
+                id="activity-logs"
+                checked={logsEnabled}
+                onCheckedChange={(checked) => {
+                  setLogsEnabled(checked);
+                  setLoggingEnabled(checked);
+                  addLog(checked ? 'Журнал активности включен' : 'Журнал активности выключен', 'info');
+                  toast({
+                    title: checked ? 'Логи включены' : 'Логи выключены',
+                    description: checked ? 'Журнал активности теперь отображается' : 'Журнал активности скрыт',
+                  });
+                }}
+              />
             </div>
 
             <div className="space-y-2">

@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { api, FileItem as ApiFileItem } from '@/lib/api';
 import { FilePreviewDialog } from '@/components/FilePreviewDialog';
 import { ProfileSettings } from '@/components/profile-settings';
-import { ActivityLog, addLog } from '@/components/activity-log';
+import { ActivityLog, addLog, getLoggingEnabled } from '@/components/activity-log';
 
 interface Platform {
   id: string;
@@ -67,7 +67,8 @@ const Index = () => {
   const [showAddContent, setShowAddContent] = useState(false);
   const [activeAddTab, setActiveAddTab] = useState<'platform' | 'game'>('platform');
   const [mainActiveTab, setMainActiveTab] = useState<'streaming' | 'games' | 'files' | 'other'>('streaming');
-  const [draggedItem, setDraggedItem] = useState<{id: string; type: 'game' | 'file'} | null>(null);
+  const [draggedItem, setDraggedItem] = useState<{id: string; type: 'game' | 'file' | 'platform'} | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [showVideoDownloader, setShowVideoDownloader] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -249,6 +250,7 @@ const Index = () => {
     setPlatforms([...platforms, platform]);
     setNewPlatform({ name: '', description: '', type: 'streaming', url: '' });
     setShowAddContent(false);
+    addLog(`Платформа "${platform.name}" добавлена`, 'success');
     toast({ title: 'Платформа добавлена!', description: `${platform.name} успешно добавлена` });
   };
 
@@ -266,15 +268,22 @@ const Index = () => {
     setGames([...games, game]);
     setNewGame({ name: '', platform: '', url: '' });
     setShowAddContent(false);
+    addLog(`Игра "${game.name}" добавлена`, 'success');
     toast({ title: 'Игра добавлена!', description: `${game.name} успешно добавлена` });
   };
 
-  const handleDragStart = (id: string, type: 'game' | 'file') => {
+  const handleDragStart = (id: string, type: 'game' | 'file' | 'platform') => {
     setDraggedItem({ id, type });
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+    setDragOverIndex(null);
   };
 
   const handleDrop = (folderId: string, folderType: 'games' | 'files') => {
@@ -284,15 +293,58 @@ const Index = () => {
       setGames(games.map(g => 
         g.id === draggedItem.id ? { ...g, folderId } : g
       ));
+      addLog('Игра добавлена в папку', 'success');
       toast({ title: 'Игра добавлена в папку!' });
     } else if (draggedItem.type === 'file' && folderType === 'files') {
       setFolderItems(folderItems.map(f => 
         f.id === draggedItem.id ? { ...f, folderId } : f
       ));
+      addLog('Файл добавлен в папку', 'success');
       toast({ title: 'Файл добавлен в папку!' });
     }
 
     setDraggedItem(null);
+  };
+
+  const handleReorder = (targetIndex: number) => {
+    if (!draggedItem || dragOverIndex === null) return;
+
+    if (draggedItem.type === 'platform') {
+      const currentIndex = platforms.findIndex(p => p.id === draggedItem.id);
+      if (currentIndex === -1 || currentIndex === targetIndex) return;
+
+      const newPlatforms = [...platforms];
+      const [removed] = newPlatforms.splice(currentIndex, 1);
+      newPlatforms.splice(targetIndex, 0, removed);
+      setPlatforms(newPlatforms);
+      addLog('Платформа перемещена', 'success');
+    } else if (draggedItem.type === 'game') {
+      const currentIndex = games.findIndex(g => g.id === draggedItem.id);
+      if (currentIndex === -1 || currentIndex === targetIndex) return;
+
+      const newGames = [...games];
+      const [removed] = newGames.splice(currentIndex, 1);
+      newGames.splice(targetIndex, 0, removed);
+      setGames(newGames);
+      addLog('Игра перемещена', 'success');
+    }
+
+    setDraggedItem(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDeletePlatform = (id: string, name: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPlatforms(platforms.filter(p => p.id !== id));
+    addLog(`Платформа "${name}" удалена`, 'warning');
+    toast({ title: 'Удалено', description: `${name} удалена` });
+  };
+
+  const handleDeleteGame = (id: string, name: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setGames(games.filter(g => g.id !== id));
+    addLog(`Игра "${name}" удалена`, 'warning');
+    toast({ title: 'Удалено', description: `${name} удалена` });
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -410,15 +462,32 @@ const Index = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {platforms.map((platform) => (
+              {platforms.map((platform, index) => (
                 <Card
                   key={platform.id}
-                  className="group relative overflow-hidden border-2 hover:border-primary transition-all duration-300 hover:shadow-xl cursor-pointer"
-                  onClick={() => platform.url && window.open(platform.url, '_blank')}
+                  draggable
+                  onDragStart={() => handleDragStart(platform.id, 'platform')}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragEnd={handleDragEnd}
+                  onDrop={() => handleReorder(index)}
+                  className={`group relative overflow-hidden border-2 transition-all duration-300 hover:shadow-xl cursor-move ${
+                    dragOverIndex === index && draggedItem?.type === 'platform' ? 'border-primary scale-105' : 'hover:border-primary'
+                  }`}
                 >
                   <div className={`absolute inset-0 bg-gradient-to-br ${platform.gradient} opacity-10 group-hover:opacity-20 transition-opacity`} />
                   <div className="relative p-6">
-                    <div className="flex items-start gap-4">
+                    <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-50 transition-opacity">
+                      <Icon name="GripVertical" size={20} className="text-muted-foreground" />
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      onClick={(e) => handleDeletePlatform(platform.id, platform.name, e)}
+                    >
+                      <Icon name="Trash2" size={16} className="text-destructive" />
+                    </Button>
+                    <div className="flex items-start gap-4" onClick={() => platform.url && window.open(platform.url, '_blank')}>
                       <div className={`p-3 rounded-xl bg-gradient-to-br ${platform.gradient}`}>
                         <Icon name={platform.icon as any} size={24} className="text-white" />
                       </div>
@@ -443,16 +512,31 @@ const Index = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {games.filter(g => !g.folderId).map((game) => (
+              {games.filter(g => !g.folderId).map((game, index) => (
                 <Card
                   key={game.id}
                   draggable
                   onDragStart={() => handleDragStart(game.id, 'game')}
-                  className="group hover:shadow-xl transition-all duration-300 cursor-move"
-                  onClick={() => game.url && window.open(game.url, '_blank')}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragEnd={handleDragEnd}
+                  onDrop={() => handleReorder(index)}
+                  className={`group relative hover:shadow-xl transition-all duration-300 cursor-move border-2 ${
+                    dragOverIndex === index && draggedItem?.type === 'game' ? 'border-primary scale-105' : 'border-transparent'
+                  }`}
                 >
                   <div className="p-6">
-                    <div className="flex items-start gap-4">
+                    <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-50 transition-opacity">
+                      <Icon name="GripVertical" size={20} className="text-muted-foreground" />
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      onClick={(e) => handleDeleteGame(game.id, game.name, e)}
+                    >
+                      <Icon name="Trash2" size={16} className="text-destructive" />
+                    </Button>
+                    <div className="flex items-start gap-4" onClick={() => game.url && window.open(game.url, '_blank')}>
                       <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700">
                         <Icon name="Gamepad2" size={24} className="text-white" />
                       </div>
@@ -756,9 +840,11 @@ const Index = () => {
         </DialogContent>
       </Dialog>
 
-      <div className="fixed bottom-6 right-6 w-96 z-50">
-        <ActivityLog maxEntries={50} />
-      </div>
+      {getLoggingEnabled() && (
+        <div className="fixed bottom-6 right-6 w-96 z-50">
+          <ActivityLog maxEntries={50} />
+        </div>
+      )}
     </div>
   );
 };

@@ -29,8 +29,11 @@ const logTypeIcons = {
 };
 
 let logListeners: ((entry: LogEntry) => void)[] = [];
+let isLoggingEnabled = localStorage.getItem('activity-logs-enabled') !== 'false';
 
 export function addLog(message: string, type: LogEntry['type'] = 'info') {
+  if (!isLoggingEnabled) return;
+  
   const entry: LogEntry = {
     id: `${Date.now()}-${Math.random()}`,
     message,
@@ -41,12 +44,24 @@ export function addLog(message: string, type: LogEntry['type'] = 'info') {
   logListeners.forEach(listener => listener(entry));
 }
 
+export function setLoggingEnabled(enabled: boolean) {
+  isLoggingEnabled = enabled;
+  localStorage.setItem('activity-logs-enabled', String(enabled));
+}
+
+export function getLoggingEnabled() {
+  return isLoggingEnabled;
+}
+
 export function ActivityLog({ maxEntries = 50 }: ActivityLogProps) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [newLogId, setNewLogId] = useState<string | null>(null);
 
   useEffect(() => {
     const listener = (entry: LogEntry) => {
       setLogs(prev => [entry, ...prev].slice(0, maxEntries));
+      setNewLogId(entry.id);
+      setTimeout(() => setNewLogId(null), 1000);
     };
     
     logListeners.push(listener);
@@ -57,9 +72,9 @@ export function ActivityLog({ maxEntries = 50 }: ActivityLogProps) {
   }, [maxEntries]);
 
   return (
-    <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-      <div className="flex items-center gap-2 border-b p-4">
-        <Icon name="Activity" size={20} />
+    <div className="rounded-lg border bg-card text-card-foreground shadow-lg backdrop-blur-sm bg-opacity-95">
+      <div className="flex items-center gap-2 border-b p-4 bg-primary/10">
+        <Icon name="Activity" size={20} className="text-primary" />
         <h3 className="font-semibold">Активность</h3>
       </div>
       <ScrollArea className="h-[300px]">
@@ -72,7 +87,10 @@ export function ActivityLog({ maxEntries = 50 }: ActivityLogProps) {
             logs.map((log) => (
               <div
                 key={log.id}
-                className="flex items-start gap-3 text-sm border-l-2 pl-3 py-2"
+                className={cn(
+                  "flex items-start gap-3 text-sm border-l-2 pl-3 py-2 rounded-r transition-all duration-300",
+                  newLogId === log.id && "animate-pulse bg-primary/5 scale-[1.02]"
+                )}
                 style={{
                   borderColor: `var(--${log.type === 'info' ? 'blue' : log.type === 'success' ? 'green' : log.type === 'error' ? 'red' : 'yellow'}-500)`,
                 }}
