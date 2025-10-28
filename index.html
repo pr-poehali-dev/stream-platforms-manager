@@ -25,6 +25,14 @@
 
     <meta name="pp-name" value="stream-platforms-manager">
       <script src="https://cdn.poehali.dev/intertnal/js/inspector-min.js"></script>
+      <script>
+        (function() {
+          const theme = localStorage.getItem('vite-ui-theme') || 'system';
+          if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+          }
+        })();
+      </script>
   </head>
 
 <body>

@@ -1,6 +1,7 @@
 const API_BASE = {
   auth: 'https://functions.poehali.dev/fc0c9484-41f9-41d8-81f9-d745467a02d4',
   files: 'https://functions.poehali.dev/7744eb57-850b-4771-a55c-ffaa2f392d95',
+  profile: 'https://functions.poehali.dev/851060a1-7583-49be-bcb8-34d613b58cf9',
 };
 
 export interface User {
@@ -24,6 +25,15 @@ export interface FileItem {
   file_url: string;
   mime_type: string;
   created_at: string;
+}
+
+export interface UserProfile {
+  id: number;
+  email: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  wallpaperUrl: string | null;
+  theme: 'light' | 'dark' | 'system';
 }
 
 class ApiClient {
@@ -153,6 +163,60 @@ class ApiClient {
       reader.onerror = () => reject(new Error('Failed to read file'));
       reader.readAsDataURL(file);
     });
+  }
+
+  async getProfile(): Promise<UserProfile> {
+    if (!this.token) throw new Error('Not authenticated');
+
+    const response = await fetch(API_BASE.profile, {
+      method: 'GET',
+      headers: {
+        'X-Session-Token': this.token,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch profile');
+    }
+
+    return response.json();
+  }
+
+  async updateProfile(updates: Partial<Omit<UserProfile, 'id'>> & { password?: string }): Promise<void> {
+    if (!this.token) throw new Error('Not authenticated');
+
+    const response = await fetch(API_BASE.profile, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Session-Token': this.token,
+      },
+      body: JSON.stringify(updates),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to update profile');
+    }
+  }
+
+  async deleteAccount(): Promise<void> {
+    if (!this.token) throw new Error('Not authenticated');
+
+    const response = await fetch(API_BASE.profile, {
+      method: 'DELETE',
+      headers: {
+        'X-Session-Token': this.token,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete account');
+    }
+
+    this.clearToken();
   }
 }
 

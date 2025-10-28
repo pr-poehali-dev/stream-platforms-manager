@@ -1,0 +1,25 @@
+{
+  "tests": [
+    {
+      "name": "Get profile without token",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "Session token required"
+      }
+    },
+    {
+      "name": "Get profile with invalid token",
+      "method": "GET",
+      "path": "/",
+      "headers": {
+        "X-Session-Token": "invalid-token-12345"
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "Invalid or expired session"
+      }
+    }
+  ]
+}

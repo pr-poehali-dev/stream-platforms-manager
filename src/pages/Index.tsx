@@ -15,6 +15,8 @@ import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 import { api, FileItem as ApiFileItem } from '@/lib/api';
 import { FilePreviewDialog } from '@/components/FilePreviewDialog';
+import { ProfileSettings } from '@/components/profile-settings';
+import { ActivityLog, addLog } from '@/components/activity-log';
 
 interface Platform {
   id: string;
@@ -70,6 +72,7 @@ const Index = () => {
   const [videoUrl, setVideoUrl] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [previewFile, setPreviewFile] = useState<FolderItem | null>(null);
+  const [showProfile, setShowProfile] = useState(false);
   const { toast } = useToast();
 
   const [platforms, setPlatforms] = useState<Platform[]>(() => {
@@ -151,12 +154,15 @@ const Index = () => {
 
   const checkAuth = async () => {
     try {
+      addLog('Проверяю авторизацию...', 'info');
       const result = await api.verifyToken();
       if (result.authenticated && result.user) {
         setIsAuthenticated(true);
         setCurrentUser({ email: result.user.email, username: result.user.username });
+        addLog('Авторизация успешна', 'success');
       }
     } catch (error) {
+      addLog('Ошибка проверки авторизации', 'error');
       console.error('Auth check failed:', error);
     } finally {
       setIsLoadingAuth(false);
@@ -166,9 +172,12 @@ const Index = () => {
   const loadFiles = async () => {
     setIsLoadingFiles(true);
     try {
+      addLog('Загружаю файлы...', 'info');
       const files = await api.getFiles();
       setApiFiles(files);
+      addLog(`Загружено файлов: ${files.length}`, 'success');
     } catch (error) {
+      addLog('Ошибка загрузки файлов', 'error');
       console.error('Failed to load files:', error);
     } finally {
       setIsLoadingFiles(false);
@@ -178,12 +187,15 @@ const Index = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      addLog('Вход в систему...', 'info');
       const result = await api.login(authForm.email, authForm.password);
       setIsAuthenticated(true);
       setCurrentUser({ email: result.user.email, username: result.user.username });
       setShowAuth(false);
+      addLog('Вход выполнен успешно', 'success');
       toast({ title: 'Успешный вход!', description: 'Добро пожаловать в StreamHub' });
     } catch (error) {
+      addLog('Ошибка входа', 'error');
       toast({ title: 'Ошибка входа', description: error instanceof Error ? error.message : 'Неверные данные', variant: 'destructive' });
     }
   };
@@ -191,21 +203,26 @@ const Index = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      addLog('Регистрация аккаунта...', 'info');
       const result = await api.register(authForm.email, authForm.password, authForm.email.split('@')[0]);
       setIsAuthenticated(true);
       setCurrentUser({ email: result.user.email, username: result.user.username });
       setShowAuth(false);
+      addLog('Регистрация успешна', 'success');
       toast({ title: 'Регистрация успешна!', description: 'Ваш аккаунт создан' });
     } catch (error) {
+      addLog('Ошибка регистрации', 'error');
       toast({ title: 'Ошибка регистрации', description: error instanceof Error ? error.message : 'Не удалось создать аккаунт', variant: 'destructive' });
     }
   };
 
   const handleLogout = () => {
+    addLog('Выход из аккаунта', 'info');
     api.clearToken();
     setIsAuthenticated(false);
     setCurrentUser(null);
     setApiFiles([]);
+    setShowProfile(false);
     toast({ title: 'Вы вышли из аккаунта' });
   };
 
@@ -289,13 +306,16 @@ const Index = () => {
     }
 
     setUploadedFile(file);
+    addLog(`Загружаю файл ${file.name}...`, 'info');
     toast({ title: 'Загрузка...', description: `Загружаем ${file.name}` });
 
     try {
       await api.uploadFile(file);
       await loadFiles();
+      addLog(`Файл ${file.name} загружен`, 'success');
       toast({ title: 'Файл загружен!', description: `${file.name} успешно добавлен в ваш аккаунт` });
     } catch (error) {
+      addLog(`Ошибка загрузки ${file.name}`, 'error');
       toast({ title: 'Ошибка загрузки', description: error instanceof Error ? error.message : 'Не удалось загрузить файл', variant: 'destructive' });
     } finally {
       setUploadedFile(null);
@@ -325,6 +345,10 @@ const Index = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setShowProfile(true)}>
+                    <Icon name="Settings" size={16} className="mr-2" />
+                    Настройки
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleLogout}>
                     <Icon name="LogOut" size={16} className="mr-2" />
                     Выйти
@@ -719,6 +743,22 @@ const Index = () => {
           </DialogContent>
         </Dialog>
       )}
+
+      <Dialog open={showProfile} onOpenChange={setShowProfile}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden p-0">
+          <ProfileSettings 
+            onLogout={handleLogout}
+            onAccountDeleted={() => {
+              handleLogout();
+              setShowProfile(false);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <div className="fixed bottom-6 right-6 w-96 z-50">
+        <ActivityLog maxEntries={50} />
+      </div>
     </div>
   );
 };
