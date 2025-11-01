@@ -166,6 +166,22 @@ class ApiClient {
     });
   }
 
+  async deleteFile(fileId: string): Promise<void> {
+    if (!this.token) throw new Error('Not authenticated');
+
+    const response = await fetch(`${API_BASE.files}?file_id=${fileId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-Auth-Token': this.token,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete file');
+    }
+  }
+
   async getProfile(): Promise<UserProfile> {
     if (!this.token) throw new Error('Not authenticated');
 

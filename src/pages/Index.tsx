@@ -477,6 +477,23 @@ const Index = () => {
     setDraggedItem(null);
   };
 
+  const handleDeleteFile = async (fileId: string) => {
+    try {
+      addLog('Удаляю файл...', 'info');
+      await api.deleteFile(fileId);
+      setApiFiles(apiFiles.filter(f => f.id !== fileId));
+      addLog('Файл удалён', 'success');
+      toast({ title: 'Файл удалён', description: 'Файл успешно удалён' });
+    } catch (error) {
+      addLog('Ошибка удаления файла', 'error');
+      toast({ 
+        title: 'Ошибка удаления', 
+        description: error instanceof Error ? error.message : 'Не удалось удалить файл',
+        variant: 'destructive' 
+      });
+    }
+  };
+
   const handleReorder = (targetIndex: number) => {
     if (!draggedItem || dragOverIndex === null) return;
 
@@ -959,11 +976,7 @@ const Index = () => {
                       }}
                       onDragEnd={() => setDraggedFile(null)}
                       onClick={() => {
-                        if (file.file_url) {
-                          window.open(file.file_url, '_blank');
-                        } else {
-                          setSelectedApiFile(file);
-                        }
+                        setSelectedApiFile(file);
                       }}
                       className="group hover:shadow-xl transition-all duration-300 cursor-pointer hover:border-primary"
                     >
@@ -1196,6 +1209,7 @@ const Index = () => {
         file={selectedApiFile}
         isOpen={!!selectedApiFile}
         onClose={() => setSelectedApiFile(null)}
+        onDelete={handleDeleteFile}
       />
 
       <Dialog open={show2FAVerify} onOpenChange={setShow2FAVerify}>
