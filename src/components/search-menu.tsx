@@ -1,4 +1,10 @@
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import Icon from '@/components/ui/icon';
 
 interface SearchEngine {
@@ -34,24 +40,28 @@ const searchEngines: SearchEngine[] = [
 ];
 
 export const SearchMenu = () => {
-  const handleSearchClick = (url: string, name: string) => {
+  const handleSearchClick = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   return (
-    <div className="flex gap-2">
-      {searchEngines.map((engine) => (
-        <Button
-          key={engine.id}
-          variant="outline"
-          size="sm"
-          onClick={() => handleSearchClick(engine.url, engine.name)}
-          className="flex items-center gap-2"
-        >
-          <Icon name={engine.icon} size={16} className={engine.color} />
-          <span>{engine.name}</span>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+          <Icon name="Globe" size={20} />
         </Button>
-      ))}
-    </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {searchEngines.map((engine) => (
+          <DropdownMenuItem 
+            key={engine.id}
+            onClick={() => handleSearchClick(engine.url)}
+          >
+            <Icon name={engine.icon} size={16} className={`mr-2 ${engine.color}`} />
+            {engine.name}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
