@@ -26,6 +26,7 @@ import { ProfileSettings } from '@/components/profile-settings';
 import { ActivityLog, addLog, getLoggingEnabled } from '@/components/activity-log';
 import { FILE_TYPES } from '@/components/file-type-filter';
 import { UploadFileDialog } from '@/components/upload-file-dialog';
+import { SearchMenu } from '@/components/search-menu';
 
 interface Platform {
   id: string;
@@ -240,10 +241,16 @@ const Index = () => {
 
   useEffect(() => {
     localStorage.setItem('streamhub_platforms', JSON.stringify(platforms));
+    if (isAuthenticated && platforms.length > 0) {
+      saveUserData();
+    }
   }, [platforms]);
 
   useEffect(() => {
     localStorage.setItem('streamhub_games', JSON.stringify(games));
+    if (isAuthenticated && games.length > 0) {
+      saveUserData();
+    }
   }, [games]);
 
   useEffect(() => {
@@ -265,6 +272,7 @@ const Index = () => {
   useEffect(() => {
     if (isAuthenticated) {
       loadFiles();
+      loadUserData();
     }
   }, [isAuthenticated]);
 
@@ -297,6 +305,36 @@ const Index = () => {
       console.error('Failed to load files:', error);
     } finally {
       setIsLoadingFiles(false);
+    }
+  };
+
+  const loadUserData = async () => {
+    try {
+      addLog('Загружаю данные пользователя...', 'info');
+      const data = await api.getUserData();
+      if (data.platforms && data.platforms.length > 0) {
+        setPlatforms(data.platforms);
+        addLog(`Загружено платформ: ${data.platforms.length}`, 'success');
+      }
+      if (data.games && data.games.length > 0) {
+        setGames(data.games);
+        addLog(`Загружено игр: ${data.games.length}`, 'success');
+      }
+    } catch (error) {
+      addLog('Ошибка загрузки данных пользователя', 'error');
+      console.error('Failed to load user data:', error);
+    }
+  };
+
+  const saveUserData = async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      await api.saveUserData(platforms, games);
+      addLog('Данные сохранены на сервере', 'success');
+    } catch (error) {
+      addLog('Ошибка сохранения данных', 'error');
+      console.error('Failed to save user data:', error);
     }
   };
 
@@ -517,14 +555,7 @@ const Index = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="text-white hover:bg-white/20"
-              onClick={() => setMainActiveTab('streaming')}
-            >
-              <Icon name="Globe" size={20} />
-            </Button>
+            <SearchMenu />
 
             {isAuthenticated ? (
               <DropdownMenu>

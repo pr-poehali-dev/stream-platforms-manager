@@ -2,6 +2,7 @@ const API_BASE = {
   auth: 'https://functions.poehali.dev/fc0c9484-41f9-41d8-81f9-d745467a02d4',
   files: 'https://functions.poehali.dev/7744eb57-850b-4771-a55c-ffaa2f392d95',
   profile: 'https://functions.poehali.dev/851060a1-7583-49be-bcb8-34d613b58cf9',
+  userData: 'https://functions.poehali.dev/7bdf2eba-1cb5-4d33-84f1-ccea93a34ef3',
 };
 
 export interface User {
@@ -217,6 +218,42 @@ class ApiClient {
     }
 
     this.clearToken();
+  }
+
+  async getUserData(): Promise<{ platforms: any[]; games: any[] }> {
+    if (!this.token) throw new Error('Not authenticated');
+
+    const response = await fetch(API_BASE.userData, {
+      method: 'GET',
+      headers: {
+        'X-Auth-Token': this.token,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch user data');
+    }
+
+    return response.json();
+  }
+
+  async saveUserData(platforms: any[], games: any[]): Promise<void> {
+    if (!this.token) throw new Error('Not authenticated');
+
+    const response = await fetch(API_BASE.userData, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Auth-Token': this.token,
+      },
+      body: JSON.stringify({ platforms, games }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to save user data');
+    }
   }
 }
 
