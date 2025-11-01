@@ -828,6 +828,24 @@ const Index = () => {
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
               <div className="lg:col-span-1">
                 <Card className="p-4">
+                  <div className="flex items-center justify-between mb-3 pb-3 border-b border-border">
+                    <h3 className="text-sm font-semibold">Папки</h3>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <Icon name="HelpCircle" size={16} className="text-muted-foreground" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80" align="end">
+                        <div className="space-y-2">
+                          <h4 className="font-semibold text-sm">Советы по работе с файлами</h4>
+                          <p className="text-xs text-muted-foreground">
+                            Для просмотра файла в новой вкладке: нажмите правой кнопкой мыши на файл и выберите "Открыть в новой вкладке"
+                          </p>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                   <div className="space-y-1">
                     {fileFolders.map((folder) => (
                       <div

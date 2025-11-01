@@ -92,10 +92,6 @@ export function FilePreviewDialog({ file, isOpen, onClose, onDelete }: FilePrevi
               <Icon name="Pencil" size={16} className="mr-2" />
               Изменить
             </Button>
-            <Button variant="outline" className="justify-start" onClick={handleView}>
-              <Icon name="ExternalLink" size={16} className="mr-2" />
-              Открыть в новой вкладке
-            </Button>
             <Button variant="outline" className="justify-start" onClick={handleDownload}>
               <Icon name="Download" size={16} className="mr-2" />
               Скачать
