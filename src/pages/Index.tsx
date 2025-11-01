@@ -27,6 +27,7 @@ import { ActivityLog, addLog, getLoggingEnabled } from '@/components/activity-lo
 import { FILE_TYPES } from '@/components/file-type-filter';
 import { UploadFileDialog } from '@/components/upload-file-dialog';
 import { SearchMenu } from '@/components/search-menu';
+import { VideoPlayerDialog } from '@/components/VideoPlayerDialog';
 
 interface Platform {
   id: string;
@@ -87,6 +88,8 @@ const Index = () => {
   const [selectedFileTypes, setSelectedFileTypes] = useState<string[]>(FILE_TYPES.map(t => t.id));
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [showFilterPopover, setShowFilterPopover] = useState(false);
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+  const [videoPlayerUrl, setVideoPlayerUrl] = useState('');
   const [show2FAVerify, setShow2FAVerify] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [pendingAuthEmail, setPendingAuthEmail] = useState('');
@@ -822,6 +825,13 @@ const Index = () => {
                   <Icon name={uploadedFile ? "Loader2" : "Upload"} size={16} className={`mr-2 ${uploadedFile ? 'animate-spin' : ''}`} />
                   {uploadedFile ? 'Загрузка...' : 'Загрузить файл'}
                 </Button>
+                <Button 
+                  onClick={() => setShowVideoPlayer(true)}
+                  variant="outline"
+                >
+                  <Icon name="Play" size={16} className="mr-2" />
+                  Видеоплеер
+                </Button>
               </div>
             </div>
 
@@ -1389,6 +1399,11 @@ const Index = () => {
           <ActivityLog maxEntries={50} />
         </div>
       )}
+
+      <VideoPlayerDialog 
+        isOpen={showVideoPlayer}
+        onClose={() => setShowVideoPlayer(false)}
+      />
     </div>
   );
 };
