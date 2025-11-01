@@ -88,17 +88,9 @@ export function FilePreviewDialog({ file, isOpen, onClose, onDelete }: FilePrevi
 
         <div className="flex gap-4 flex-1 overflow-hidden">
           <div className="flex-shrink-0 w-48 flex flex-col gap-2">
-            <Button variant="outline" className="justify-start" onClick={handleView}>
-              <Icon name="Pencil" size={16} className="mr-2" />
-              Изменить
-            </Button>
             <Button variant="outline" className="justify-start" onClick={handleDownload}>
               <Icon name="Download" size={16} className="mr-2" />
               Скачать
-            </Button>
-            <Button variant="outline" className="justify-start" onClick={handleShare}>
-              <Icon name="Share2" size={16} className="mr-2" />
-              Поделиться
             </Button>
             <Button variant="outline" className="justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950" onClick={handleDelete}>
               <Icon name="Trash2" size={16} className="mr-2" />
