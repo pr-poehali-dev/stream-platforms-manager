@@ -837,11 +837,16 @@ const Index = () => {
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-80" align="end">
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           <h4 className="font-semibold text-sm">Советы по работе с файлами</h4>
-                          <p className="text-xs text-muted-foreground">
-                            Для просмотра файла в новой вкладке: нажмите правой кнопкой мыши на файл и выберите "Открыть в новой вкладке"
-                          </p>
+                          <div className="space-y-2">
+                            <p className="text-xs text-muted-foreground">
+                              <strong>На компьютере:</strong> нажмите правой кнопкой мыши на файл и выберите "Открыть в новой вкладке"
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              <strong>На телефоне:</strong> зажмите картинку и нажмите "Открыть изображение"
+                            </p>
+                          </div>
                         </div>
                       </PopoverContent>
                     </Popover>
