@@ -108,6 +108,7 @@ const Index = () => {
     const saved = localStorage.getItem('streamhub_file_folder_map');
     return saved ? JSON.parse(saved) : {};
   });
+  const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
 
   const handleFileTypesChange = (types: string[]) => {
@@ -689,7 +690,17 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="files" className="space-y-6">
-            <div className="flex items-center justify-end">
+            <div className="flex items-center justify-between gap-4">
+              <div className="relative flex-1 max-w-md">
+                <Icon name="Search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Поиск файлов..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+
               <div className="flex gap-2">
                 <Button 
                   variant="outline" 
@@ -862,12 +873,12 @@ const Index = () => {
                 const fileTypeId = getFileTypeId(file.mime_type, file.original_filename);
                 const typeMatches = selectedFileTypes.includes(fileTypeId);
                 
-                if (selectedFolder === 'all') {
-                  return typeMatches;
-                }
+                const folderMatches = selectedFolder === 'all' ? true : fileFolderMap[file.id] === selectedFolder;
                 
-                const fileFolder = fileFolderMap[file.id];
-                return typeMatches && fileFolder === selectedFolder;
+                const searchMatches = searchQuery.trim() === '' || 
+                  file.original_filename.toLowerCase().includes(searchQuery.toLowerCase());
+                
+                return typeMatches && folderMatches && searchMatches;
               });
 
               return filteredFiles.length === 0 ? (
