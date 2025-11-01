@@ -210,26 +210,16 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
     }
   };
 
-  const handleSend2FACode = async () => {
-    try {
-      addLog('Отправляю код на email...', 'info');
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      
-      toast({
-        title: 'Код отправлен',
-        description: `6-значный код отправлен на ${email}`,
-      });
-      addLog(`Код 2FA отправлен на ${email}`, 'success');
-      
-      console.log('2FA Code:', code);
-    } catch (error) {
-      addLog('Ошибка отправки кода', 'error');
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось отправить код',
-        variant: 'destructive',
-      });
-    }
+  const handleGenerate2FACode = () => {
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    addLog('Генерирую новый 6-значный код...', 'info');
+    toast({
+      title: 'Код сгенерирован',
+      description: `Ваш новый 6-значный код: ${code}. Запишите его!`,
+      duration: 10000,
+    });
+    addLog(`Новый 2FA код сгенерирован: ${code}`, 'success');
+    return code;
   };
 
   const handleDeleteAccount = async () => {
@@ -467,7 +457,6 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
                   onCheckedChange={(checked) => {
                     if (checked) {
                       setShow2FADialog(true);
-                      handleSend2FACode();
                     } else {
                       setTwoFactorEnabled(false);
                       localStorage.removeItem(`2fa_enabled_${email}`);
@@ -556,7 +545,7 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
           <DialogHeader>
             <DialogTitle>Настройка двухфакторной аутентификации</DialogTitle>
             <DialogDescription>
-              Мы отправили 6-значный код на ваш email: {email}
+              Создайте свой 6-значный код для защиты аккаунта
             </DialogDescription>
           </DialogHeader>
 
@@ -564,12 +553,12 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
             <div className="flex justify-center p-6 bg-muted rounded-lg">
               <div className="text-center space-y-3">
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                  <Icon name="Mail" size={32} className="text-primary" />
+                  <Icon name="Key" size={32} className="text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold">Проверьте вашу почту</p>
+                  <p className="font-semibold">Создайте свой код</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Код действителен 10 минут
+                    Придумайте 6-значный код или сгенерируйте новый
                   </p>
                 </div>
               </div>
@@ -582,25 +571,17 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
                 </div>
                 <div className="space-y-2 text-sm">
                   <p className="font-semibold text-blue-900 dark:text-blue-100">
-                    Как запомнить код двухфакторной аутентификации:
+                    Как создать код двухфакторной аутентификации:
                   </p>
                   <ol className="list-decimal list-inside space-y-1 text-blue-800 dark:text-blue-200">
-                    <li>Откройте письмо с кодом в вашем почтовом ящике</li>
-                    <li>Скопируйте 6-значный код из письма</li>
-                    <li>Вставьте код в поле ниже</li>
+                    <li>Нажмите "Сгенерировать новый" для автоматического создания кода</li>
+                    <li>Или введите свой собственный 6-значный код</li>
+                    <li>Обязательно запишите код в надёжном месте</li>
                     <li>Нажмите "Подтвердить" для активации 2FA</li>
                   </ol>
                   <p className="text-xs text-blue-700 dark:text-blue-300 mt-2">
-                    💡 Совет: Если письмо не пришло, проверьте папку "Спам" или нажмите "Отправить повторно"
+                    💡 Совет: Храните код в безопасном месте - он понадобится при каждом входе
                   </p>
-                  <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800">
-                    <p className="text-xs text-blue-800 dark:text-blue-200 font-semibold mb-1">
-                      ⚠️ Если код так и не пришёл:
-                    </p>
-                    <p className="text-xs text-blue-700 dark:text-blue-300">
-                      Придумайте и запомните свой собственный 6-значный код (например, 123456), запишите его и используйте при каждом входе. Вы сможете изменить его позже в настройках безопасности.
-                    </p>
-                  </div>
                 </div>
               </div>
             </div>
@@ -608,33 +589,23 @@ export function ProfileSettings({ onLogout, onAccountDeleted }: ProfileSettingsP
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="2fa-code">Введите 6-значный код</Label>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="link" 
-                    size="sm"
-                    onClick={handleSend2FACode}
-                    className="h-auto p-0 text-xs"
-                  >
-                    <Icon name="RotateCw" size={12} className="mr-1" />
-                    Отправить повторно
-                  </Button>
-                  <Button 
-                    variant="link" 
-                    size="sm"
-                    onClick={() => {
-                      const newCode = Math.floor(100000 + Math.random() * 900000).toString();
-                      setTwoFactorCode(newCode);
-                      toast({
-                        title: 'Новый код сгенерирован',
-                        description: `Ваш новый код: ${newCode}. Запомните или запишите его!`,
-                      });
-                    }}
-                    className="h-auto p-0 text-xs"
-                  >
-                    <Icon name="Shuffle" size={12} className="mr-1" />
-                    Сгенерировать новый
-                  </Button>
-                </div>
+                <Button 
+                  variant="link" 
+                  size="sm"
+                  onClick={() => {
+                    const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+                    setTwoFactorCode(newCode);
+                    toast({
+                      title: 'Новый код сгенерирован',
+                      description: `Ваш код: ${newCode}. Обязательно запишите его!`,
+                      duration: 10000,
+                    });
+                  }}
+                  className="h-auto p-0 text-xs"
+                >
+                  <Icon name="Shuffle" size={12} className="mr-1" />
+                  Сгенерировать новый
+                </Button>
               </div>
               <Input
                 id="2fa-code"

@@ -104,6 +104,10 @@ const Index = () => {
   const [newFolderName, setNewFolderName] = useState('');
   const [draggedFile, setDraggedFile] = useState<ApiFileItem | null>(null);
   const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
+  const [fileFolderMap, setFileFolderMap] = useState<Record<number, string>>(() => {
+    const saved = localStorage.getItem('streamhub_file_folder_map');
+    return saved ? JSON.parse(saved) : {};
+  });
   const { toast } = useToast();
 
   const handleFileTypesChange = (types: string[]) => {
@@ -248,6 +252,10 @@ const Index = () => {
   useEffect(() => {
     localStorage.setItem('streamhub_folder_items', JSON.stringify(folderItems));
   }, [folderItems]);
+
+  useEffect(() => {
+    localStorage.setItem('streamhub_file_folder_map', JSON.stringify(fileFolderMap));
+  }, [fileFolderMap]);
 
   useEffect(() => {
     checkAuth();
@@ -508,7 +516,12 @@ const Index = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-white hover:bg-white/20"
+              onClick={() => setMainActiveTab('streaming')}
+            >
               <Icon name="Globe" size={20} />
             </Button>
 
@@ -769,8 +782,25 @@ const Index = () => {
                         onDrop={(e) => {
                           e.preventDefault();
                           setDragOverFolder(null);
-                          if (draggedFile && folder.id !== 'all') {
-                            addLog(`Файл "${draggedFile.filename}" перемещён в "${folder.name}"`, 'success');
+                          if (draggedFile) {
+                            if (folder.id === 'all') {
+                              setFileFolderMap(prev => {
+                                const updated = { ...prev };
+                                delete updated[draggedFile.id];
+                                return updated;
+                              });
+                              addLog(`Файл "${draggedFile.original_filename}" перемещён во "Все файлы"`, 'success');
+                            } else {
+                              setFileFolderMap(prev => ({
+                                ...prev,
+                                [draggedFile.id]: folder.id
+                              }));
+                              addLog(`Файл "${draggedFile.original_filename}" перемещён в "${folder.name}"`, 'success');
+                              toast({
+                                title: 'Файл перемещён',
+                                description: `Файл добавлен в папку "${folder.name}"`
+                              });
+                            }
                           }
                           setDraggedFile(null);
                         }}
@@ -830,7 +860,14 @@ const Index = () => {
                 };
                 
                 const fileTypeId = getFileTypeId(file.mime_type, file.original_filename);
-                return selectedFileTypes.includes(fileTypeId);
+                const typeMatches = selectedFileTypes.includes(fileTypeId);
+                
+                if (selectedFolder === 'all') {
+                  return typeMatches;
+                }
+                
+                const fileFolder = fileFolderMap[file.id];
+                return typeMatches && fileFolder === selectedFolder;
               });
 
               return filteredFiles.length === 0 ? (
@@ -879,8 +916,14 @@ const Index = () => {
                         addLog(`Перетаскивание файла "${file.original_filename}"`, 'info');
                       }}
                       onDragEnd={() => setDraggedFile(null)}
-                      onClick={() => setSelectedApiFile(file)}
-                      className="group hover:shadow-xl transition-all duration-300 cursor-move hover:border-primary"
+                      onClick={() => {
+                        if (file.file_url) {
+                          window.open(file.file_url, '_blank');
+                        } else {
+                          setSelectedApiFile(file);
+                        }
+                      }}
+                      className="group hover:shadow-xl transition-all duration-300 cursor-pointer hover:border-primary"
                     >
                       <div className="p-6">
                         <div className="flex items-start gap-4">
