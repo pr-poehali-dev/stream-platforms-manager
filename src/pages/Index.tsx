@@ -483,11 +483,11 @@ const Index = () => {
     setDraggedItem(null);
   };
 
-  const handleDeleteFile = async (fileId: string) => {
+  const handleDeleteFile = async (fileId: string | number) => {
     try {
       addLog('Удаляю файл...', 'info');
-      await api.deleteFile(fileId);
-      setApiFiles(apiFiles.filter(f => f.id !== fileId));
+      await api.deleteFile(fileId.toString());
+      setApiFiles(apiFiles.filter(f => f.id.toString() !== fileId.toString()));
       addLog('Файл удалён', 'success');
       toast({ title: 'Файл удалён', description: 'Файл успешно удалён' });
     } catch (error) {
