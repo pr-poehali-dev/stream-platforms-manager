@@ -1037,16 +1037,29 @@ const Index = () => {
                         addLog(`Перетаскивание файла "${file.original_filename}"`, 'info');
                       }}
                       onDragEnd={() => setDraggedFile(null)}
-                      onClick={() => {
-                        setSelectedApiFile(file);
-                      }}
                       onContextMenu={(e) => handleContextMenu(e, file)}
-                      className="group hover:shadow-xl transition-all duration-300 cursor-pointer hover:border-primary relative"
+                      className="group hover:shadow-xl transition-all duration-300 hover:border-primary relative"
                     >
                       <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-50 transition-opacity">
                         <Icon name="GripVertical" size={20} className="text-muted-foreground" />
                       </div>
-                      <div className="p-6">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-8 w-8"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleContextMenu(e as any, file);
+                        }}
+                      >
+                        <Icon name="MoreVertical" size={18} />
+                      </Button>
+                      <div 
+                        className="p-6 cursor-pointer"
+                        onClick={() => {
+                          setSelectedApiFile(file);
+                        }}
+                      >
                         <div className="flex items-start gap-4">
                           <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-green-700">
                             <Icon name={getFileIcon(file.mime_type) as any} size={24} className="text-white" />
