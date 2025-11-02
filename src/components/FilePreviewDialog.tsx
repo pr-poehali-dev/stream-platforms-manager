@@ -8,7 +8,7 @@ interface FilePreviewDialogProps {
   file: FileItem | null;
   isOpen: boolean;
   onClose: () => void;
-  onDelete?: (fileId: string) => void;
+  onDelete?: (fileId: string | number) => void;
 }
 
 export function FilePreviewDialog({ file, isOpen, onClose, onDelete }: FilePreviewDialogProps) {
@@ -66,6 +66,10 @@ export function FilePreviewDialog({ file, isOpen, onClose, onDelete }: FilePrevi
     if (onDelete) {
       onDelete(file.id);
       onClose();
+      toast({
+        title: 'Удаление файла',
+        description: 'Файл удаляется...'
+      });
     }
   };
 

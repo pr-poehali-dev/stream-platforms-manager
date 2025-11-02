@@ -485,13 +485,15 @@ const Index = () => {
 
   const handleDeleteFile = async (fileId: string | number) => {
     try {
-      addLog('Удаляю файл...', 'info');
-      await api.deleteFile(fileId.toString());
-      setApiFiles(apiFiles.filter(f => f.id.toString() !== fileId.toString()));
-      addLog('Файл удалён', 'success');
-      toast({ title: 'Файл удалён', description: 'Файл успешно удалён' });
+      const fileIdStr = fileId.toString();
+      addLog(`Удаляю файл с ID: ${fileIdStr}...`, 'info');
+      await api.deleteFile(fileIdStr);
+      setApiFiles(prev => prev.filter(f => f.id.toString() !== fileIdStr));
+      addLog('Файл удалён успешно', 'success');
+      toast({ title: 'Файл удалён', description: 'Файл успешно удалён из системы' });
     } catch (error) {
       addLog('Ошибка удаления файла', 'error');
+      console.error('Delete error:', error);
       toast({ 
         title: 'Ошибка удаления', 
         description: error instanceof Error ? error.message : 'Не удалось удалить файл',
