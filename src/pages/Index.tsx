@@ -27,7 +27,7 @@ import { ActivityLog, addLog, getLoggingEnabled } from '@/components/activity-lo
 import { FILE_TYPES } from '@/components/file-type-filter';
 import { UploadFileDialog } from '@/components/upload-file-dialog';
 import { SearchMenu } from '@/components/search-menu';
-import { VideoPlayerDialog } from '@/components/VideoPlayerDialog';
+
 
 interface Platform {
   id: string;
@@ -88,8 +88,7 @@ const Index = () => {
   const [selectedFileTypes, setSelectedFileTypes] = useState<string[]>(FILE_TYPES.map(t => t.id));
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [showFilterPopover, setShowFilterPopover] = useState(false);
-  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
-  const [videoPlayerUrl, setVideoPlayerUrl] = useState('');
+
   const [show2FAVerify, setShow2FAVerify] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [pendingAuthEmail, setPendingAuthEmail] = useState('');
@@ -113,6 +112,10 @@ const Index = () => {
     return saved ? JSON.parse(saved) : {};
   });
   const [searchQuery, setSearchQuery] = useState('');
+  const [contextMenuFile, setContextMenuFile] = useState<ApiFileItem | null>(null);
+  const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
+  const [showMoveToFolderDialog, setShowMoveToFolderDialog] = useState(false);
+  const [fileToMove, setFileToMove] = useState<ApiFileItem | null>(null);
   const { toast } = useToast();
 
   const handleFileTypesChange = (types: string[]) => {
@@ -497,6 +500,39 @@ const Index = () => {
     }
   };
 
+  const handleContextMenu = (e: React.MouseEvent, file: ApiFileItem) => {
+    e.preventDefault();
+    setContextMenuFile(file);
+    setContextMenuPosition({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMoveToFolder = (folderId: string) => {
+    if (!fileToMove) return;
+    
+    if (folderId === 'all') {
+      setFileFolderMap(prev => {
+        const updated = { ...prev };
+        delete updated[fileToMove.id];
+        return updated;
+      });
+      addLog(`Файл "${fileToMove.original_filename}" перемещён во "Все файлы"`, 'success');
+    } else {
+      const folderName = fileFolders.find(f => f.id === folderId)?.name || '';
+      setFileFolderMap(prev => ({
+        ...prev,
+        [fileToMove.id]: folderId
+      }));
+      addLog(`Файл "${fileToMove.original_filename}" перемещён в "${folderName}"`, 'success');
+      toast({
+        title: 'Файл перемещён',
+        description: `Файл добавлен в папку "${folderName}"`
+      });
+    }
+    
+    setShowMoveToFolderDialog(false);
+    setFileToMove(null);
+  };
+
   const handleReorder = (targetIndex: number) => {
     if (!draggedItem || dragOverIndex === null) return;
 
@@ -825,13 +861,6 @@ const Index = () => {
                   <Icon name={uploadedFile ? "Loader2" : "Upload"} size={16} className={`mr-2 ${uploadedFile ? 'animate-spin' : ''}`} />
                   {uploadedFile ? 'Загрузка...' : 'Загрузить файл'}
                 </Button>
-                <Button 
-                  onClick={() => setShowVideoPlayer(true)}
-                  variant="outline"
-                >
-                  <Icon name="Play" size={16} className="mr-2" />
-                  Видеоплеер
-                </Button>
               </div>
             </div>
 
@@ -1011,8 +1040,12 @@ const Index = () => {
                       onClick={() => {
                         setSelectedApiFile(file);
                       }}
-                      className="group hover:shadow-xl transition-all duration-300 cursor-pointer hover:border-primary"
+                      onContextMenu={(e) => handleContextMenu(e, file)}
+                      className="group hover:shadow-xl transition-all duration-300 cursor-pointer hover:border-primary relative"
                     >
+                      <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-50 transition-opacity">
+                        <Icon name="GripVertical" size={20} className="text-muted-foreground" />
+                      </div>
                       <div className="p-6">
                         <div className="flex items-start gap-4">
                           <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-green-700">
@@ -1400,10 +1433,101 @@ const Index = () => {
         </div>
       )}
 
-      <VideoPlayerDialog 
-        isOpen={showVideoPlayer}
-        onClose={() => setShowVideoPlayer(false)}
-      />
+      {contextMenuPosition && contextMenuFile && (
+        <>
+          <div 
+            className="fixed inset-0 z-40" 
+            onClick={() => {
+              setContextMenuPosition(null);
+              setContextMenuFile(null);
+            }}
+          />
+          <div
+            className="fixed z-50 bg-background border border-border rounded-lg shadow-lg py-1 min-w-[200px]"
+            style={{
+              left: `${contextMenuPosition.x}px`,
+              top: `${contextMenuPosition.y}px`,
+            }}
+          >
+            <button
+              onClick={() => {
+                setSelectedApiFile(contextMenuFile);
+                setContextMenuPosition(null);
+                setContextMenuFile(null);
+              }}
+              className="w-full px-4 py-2 text-left hover:bg-muted flex items-center gap-2 text-sm"
+            >
+              <Icon name="Eye" size={16} />
+              Открыть
+            </button>
+            <button
+              onClick={() => {
+                setFileToMove(contextMenuFile);
+                setShowMoveToFolderDialog(true);
+                setContextMenuPosition(null);
+                setContextMenuFile(null);
+              }}
+              className="w-full px-4 py-2 text-left hover:bg-muted flex items-center gap-2 text-sm"
+            >
+              <Icon name="FolderInput" size={16} />
+              Переместить в другую папку
+            </button>
+            <button
+              onClick={async () => {
+                await handleDeleteFile(contextMenuFile.id.toString());
+                setContextMenuPosition(null);
+                setContextMenuFile(null);
+              }}
+              className="w-full px-4 py-2 text-left hover:bg-muted flex items-center gap-2 text-sm text-red-600"
+            >
+              <Icon name="Trash2" size={16} />
+              Удалить
+            </button>
+            <div className="border-t border-border my-1" />
+            <div className="px-4 py-2 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2 mb-1">
+                <Icon name="Calendar" size={14} />
+                Добавлено
+              </div>
+              <div className="pl-5">
+                {new Date(contextMenuFile.created_at).toLocaleString('ru-RU', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      <Dialog open={showMoveToFolderDialog} onOpenChange={setShowMoveToFolderDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Переместить файл в папку</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {fileFolders.map((folder) => (
+              <button
+                key={folder.id}
+                onClick={() => handleMoveToFolder(folder.id)}
+                className={`
+                  w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left
+                  ${fileFolderMap[fileToMove?.id || 0] === folder.id ? 'bg-primary/10 border-2 border-primary' : 'border-2 border-transparent'}
+                `}
+              >
+                <Icon name={folder.icon as any} size={20} className={folder.color} />
+                <span className="font-medium">{folder.name}</span>
+                {fileFolderMap[fileToMove?.id || 0] === folder.id && (
+                  <Icon name="Check" size={16} className="ml-auto text-primary" />
+                )}
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

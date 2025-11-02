@@ -109,8 +109,13 @@ export function FilePreviewDialog({ file, isOpen, onClose, onDelete }: FilePrevi
                   />
                 )}
                 {file.mime_type.startsWith('video/') && (
-                  <video controls className="max-w-full max-h-[500px] rounded-lg">
+                  <video 
+                    controls 
+                    autoPlay
+                    className="max-w-full max-h-[500px] rounded-lg bg-black"
+                  >
                     <source src={file.file_url} type={file.mime_type} />
+                    Ваш браузер не поддерживает воспроизведение видео.
                   </video>
                 )}
                 {file.mime_type.startsWith('audio/') && (
