@@ -135,73 +135,95 @@ class ApiClient {
   async uploadFile(file: File, onProgress?: (percent: number) => void): Promise<FileItem> {
     if (!this.token) throw new Error('Not authenticated');
 
+    let mimeType = file.type;
+    if (!mimeType || mimeType === 'application/octet-stream') {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      const mimeMap: Record<string, string> = {
+        'mp4': 'video/mp4', 'avi': 'video/x-msvideo', 'mkv': 'video/x-matroska',
+        'mov': 'video/quicktime', 'wmv': 'video/x-ms-wmv', 'flv': 'video/x-flv',
+        'webm': 'video/webm', 'm4v': 'video/x-m4v', 'mpg': 'video/mpeg',
+        'mpeg': 'video/mpeg', '3gp': 'video/3gpp', 'ogv': 'video/ogg',
+        'ts': 'video/mp2t', 'vob': 'video/dvd',
+        'ppt': 'application/vnd.ms-powerpoint',
+        'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+      };
+      if (ext && mimeMap[ext]) mimeType = mimeMap[ext];
+    }
+
+    if (onProgress) onProgress(1);
+
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
+      const chunkSize = 1024 * 1024;
+      let offset = 0;
+      const base64Parts: string[] = [];
       
-      reader.onprogress = (event) => {
-        if (event.lengthComputable && onProgress) {
-          const percent = Math.round((event.loaded / event.total) * 50);
-          onProgress(percent);
-        }
+      const readNextChunk = () => {
+        const slice = file.slice(offset, offset + chunkSize);
+        const reader = new FileReader();
+        
+        reader.onload = (e) => {
+          const result = e.target?.result as string;
+          const base64 = result.split(',')[1];
+          base64Parts.push(base64);
+          
+          offset += chunkSize;
+          const readProgress = Math.min(Math.round((offset / file.size) * 30), 30);
+          if (onProgress) onProgress(readProgress);
+          
+          if (offset < file.size) {
+            readNextChunk();
+          } else {
+            uploadFile(base64Parts.join(''));
+          }
+        };
+        
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(slice);
       };
       
-      reader.onload = async () => {
-        const base64 = (reader.result as string).split(',')[1];
-        
-        if (onProgress) onProgress(50);
-        
-        let mimeType = file.type;
-        if (!mimeType || mimeType === 'application/octet-stream') {
-          const ext = file.name.split('.').pop()?.toLowerCase();
-          const mimeMap: Record<string, string> = {
-            'mp4': 'video/mp4',
-            'avi': 'video/x-msvideo',
-            'mkv': 'video/x-matroska',
-            'mov': 'video/quicktime',
-            'wmv': 'video/x-ms-wmv',
-            'flv': 'video/x-flv',
-            'webm': 'video/webm',
-            'm4v': 'video/x-m4v',
-            'mpg': 'video/mpeg',
-            'mpeg': 'video/mpeg',
-            '3gp': 'video/3gpp',
-            'ogv': 'video/ogg',
-            'ts': 'video/mp2t',
-            'vob': 'video/dvd',
-            'ppt': 'application/vnd.ms-powerpoint',
-            'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
-          };
-          if (ext && mimeMap[ext]) {
-            mimeType = mimeMap[ext];
-          }
-        }
-        
-        const response = await fetch(API_BASE.files, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Auth-Token': this.token!,
-          },
-          body: JSON.stringify({
+      const uploadFile = async (base64: string) => {
+        try {
+          if (onProgress) onProgress(35);
+          
+          const xhr = new XMLHttpRequest();
+          
+          xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable && onProgress) {
+              const uploadPercent = Math.round(35 + (e.loaded / e.total) * 60);
+              onProgress(uploadPercent);
+            }
+          });
+          
+          xhr.addEventListener('load', async () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              if (onProgress) onProgress(100);
+              resolve(JSON.parse(xhr.responseText));
+            } else {
+              const error = JSON.parse(xhr.responseText);
+              reject(new Error(error.error || 'Failed to upload file'));
+            }
+          });
+          
+          xhr.addEventListener('error', () => {
+            reject(new Error('Network error during upload'));
+          });
+          
+          xhr.open('POST', API_BASE.files);
+          xhr.setRequestHeader('Content-Type', 'application/json');
+          xhr.setRequestHeader('X-Auth-Token', this.token!);
+          
+          xhr.send(JSON.stringify({
             filename: file.name,
             content: base64,
             file_type: mimeType,
             mime_type: mimeType,
-          }),
-        });
-
-        if (onProgress) onProgress(90);
-
-        if (!response.ok) {
-          const error = await response.json();
-          reject(new Error(error.error || 'Failed to upload file'));
-        } else {
-          if (onProgress) onProgress(100);
-          resolve(await response.json());
+          }));
+        } catch (error) {
+          reject(error);
         }
       };
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsDataURL(file);
+      
+      readNextChunk();
     });
   }
 
