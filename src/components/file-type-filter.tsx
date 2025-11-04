@@ -89,7 +89,7 @@ export const FILE_TYPES: FileType[] = [
     id: 'video',
     name: 'Видео',
     icon: 'Video',
-    extensions: ['.mp4', '.avi', '.mkv', '.mov', '.wmv'],
+    extensions: ['.mp4', '.avi', '.mkv', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.mpg', '.mpeg', '.3gp', '.ogv', '.ts', '.vob'],
     color: 'text-pink-500',
   },
   {

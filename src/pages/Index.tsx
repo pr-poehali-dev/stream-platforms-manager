@@ -601,8 +601,12 @@ const Index = () => {
       toast({ title: 'Файл загружен!', description: `${file.name} успешно добавлен в ваш аккаунт` });
       setShowUploadDialog(false);
       
-      const isVideo = file.type.startsWith('video/');
-      const isPresentation = file.type.includes('presentation') || file.type.includes('powerpoint');
+      const fileName = file.name.toLowerCase();
+      const isVideo = file.type.startsWith('video/') || 
+                      ['.mp4', '.avi', '.mkv', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.mpg', '.mpeg', '.3gp', '.ogv', '.ts', '.vob'].some(ext => fileName.endsWith(ext));
+      const isPresentation = file.type.includes('presentation') || 
+                             file.type.includes('powerpoint') ||
+                             ['.ppt', '.pptx'].some(ext => fileName.endsWith(ext));
       
       if (isVideo || isPresentation) {
         setTimeout(() => {
@@ -627,6 +631,29 @@ const Index = () => {
           </div>
 
           <div className="flex items-center gap-3">
+            {uploadedFile && uploadProgress > 0 && (
+              <button 
+                onClick={() => setShowUploadDialog(true)}
+                className="hidden sm:flex items-center gap-3 bg-white/10 hover:bg-white/20 transition-colors rounded-lg px-4 py-2 backdrop-blur cursor-pointer"
+              >
+                <Icon name="Loader2" size={18} className="text-white animate-spin" />
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs text-white font-medium truncate max-w-[150px]">
+                    {uploadedFile.name}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-32 bg-white/20 rounded-full h-1.5 overflow-hidden">
+                      <div 
+                        className="h-full bg-white transition-all duration-300"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-white">{uploadProgress}%</span>
+                  </div>
+                </div>
+              </button>
+            )}
+            
             <SearchMenu />
 
             {isAuthenticated ? (
@@ -873,9 +900,14 @@ const Index = () => {
                 <Button 
                   onClick={() => setShowUploadDialog(true)} 
                   disabled={uploadedFile !== null}
+                  className="relative"
                 >
                   <Icon name={uploadedFile ? "Loader2" : "Upload"} size={16} className={`mr-2 ${uploadedFile ? 'animate-spin' : ''}`} />
-                  {uploadedFile ? 'Загрузка...' : 'Загрузить файл'}
+                  <span className="hidden sm:inline">{uploadedFile ? 'Загрузка...' : 'Загрузить файл'}</span>
+                  <span className="sm:hidden">{uploadedFile ? `${uploadProgress}%` : 'Загрузить'}</span>
+                  {uploadedFile && uploadProgress > 0 && (
+                    <div className="absolute bottom-0 left-0 h-1 bg-green-400 transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                  )}
                 </Button>
               </div>
             </div>

@@ -87,7 +87,11 @@ export function UploadFileDialog({ isOpen, onClose, onFileSelected, isUploading,
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open && !isUploading) {
+        onClose();
+      }
+    }}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
           <div className="flex items-center justify-between">
@@ -216,23 +220,30 @@ export function UploadFileDialog({ isOpen, onClose, onFileSelected, isUploading,
             </label>
           </div>
 
-          <p className="text-xs text-center text-muted-foreground">
-            {selectedTypes.length === 0 
-              ? 'Выберите форматы через фильтр'
-              : `Разрешено ${selectedTypes.length} типов файлов`
-            }
-          </p>
+          {isUploading ? (
+            <p className="text-xs text-center text-muted-foreground">
+              Вы можете закрыть это окно — загрузка продолжится в фоне
+            </p>
+          ) : (
+            <p className="text-xs text-center text-muted-foreground">
+              {selectedTypes.length === 0 
+                ? 'Выберите форматы через фильтр'
+                : `Разрешено ${selectedTypes.length} типов файлов`
+              }
+            </p>
+          )}
 
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={onClose}
-              disabled={isUploading}
-              className="flex-1"
-            >
-              Отмена
-            </Button>
-          </div>
+          {!isUploading && (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={onClose}
+                className="flex-1"
+              >
+                Отмена
+              </Button>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

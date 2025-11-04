@@ -158,8 +158,10 @@ export function FilePreviewDialog({ file, isOpen, onClose, onDelete }: FilePrevi
                     controls 
                     autoPlay
                     className="max-w-full max-h-[500px] rounded-lg bg-black"
+                    preload="metadata"
                   >
                     <source src={file.file_url} type={file.mime_type} />
+                    <source src={file.file_url} />
                     Ваш браузер не поддерживает воспроизведение видео.
                   </video>
                 )}

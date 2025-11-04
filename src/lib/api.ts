@@ -150,6 +150,32 @@ class ApiClient {
         
         if (onProgress) onProgress(50);
         
+        let mimeType = file.type;
+        if (!mimeType || mimeType === 'application/octet-stream') {
+          const ext = file.name.split('.').pop()?.toLowerCase();
+          const mimeMap: Record<string, string> = {
+            'mp4': 'video/mp4',
+            'avi': 'video/x-msvideo',
+            'mkv': 'video/x-matroska',
+            'mov': 'video/quicktime',
+            'wmv': 'video/x-ms-wmv',
+            'flv': 'video/x-flv',
+            'webm': 'video/webm',
+            'm4v': 'video/x-m4v',
+            'mpg': 'video/mpeg',
+            'mpeg': 'video/mpeg',
+            '3gp': 'video/3gpp',
+            'ogv': 'video/ogg',
+            'ts': 'video/mp2t',
+            'vob': 'video/dvd',
+            'ppt': 'application/vnd.ms-powerpoint',
+            'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+          };
+          if (ext && mimeMap[ext]) {
+            mimeType = mimeMap[ext];
+          }
+        }
+        
         const response = await fetch(API_BASE.files, {
           method: 'POST',
           headers: {
@@ -159,8 +185,8 @@ class ApiClient {
           body: JSON.stringify({
             filename: file.name,
             content: base64,
-            file_type: file.type,
-            mime_type: file.type,
+            file_type: mimeType,
+            mime_type: mimeType,
           }),
         });
 
