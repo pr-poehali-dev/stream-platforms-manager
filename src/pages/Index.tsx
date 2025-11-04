@@ -83,6 +83,7 @@ const Index = () => {
   const [showVideoDownloader, setShowVideoDownloader] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [previewFile, setPreviewFile] = useState<FolderItem | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const [selectedFileTypes, setSelectedFileTypes] = useState<string[]>(FILE_TYPES.map(t => t.id));
@@ -587,20 +588,33 @@ const Index = () => {
     }
 
     setUploadedFile(file);
+    setUploadProgress(0);
     addLog(`Загружаю файл ${file.name}...`, 'info');
     toast({ title: 'Загрузка...', description: `Загружаем ${file.name}` });
 
     try {
-      await api.uploadFile(file);
+      const uploadedFileData = await api.uploadFile(file, (percent) => {
+        setUploadProgress(percent);
+      });
       await loadFiles();
       addLog(`Файл ${file.name} загружен`, 'success');
       toast({ title: 'Файл загружен!', description: `${file.name} успешно добавлен в ваш аккаунт` });
       setShowUploadDialog(false);
+      
+      const isVideo = file.type.startsWith('video/');
+      const isPresentation = file.type.includes('presentation') || file.type.includes('powerpoint');
+      
+      if (isVideo || isPresentation) {
+        setTimeout(() => {
+          setSelectedApiFile(uploadedFileData);
+        }, 300);
+      }
     } catch (error) {
       addLog(`Ошибка загрузки ${file.name}`, 'error');
       toast({ title: 'Ошибка загрузки', description: error instanceof Error ? error.message : 'Не удалось загрузить файл', variant: 'destructive' });
     } finally {
       setUploadedFile(null);
+      setUploadProgress(0);
     }
   };
 
@@ -1393,6 +1407,8 @@ const Index = () => {
         onClose={() => setShowUploadDialog(false)}
         onFileSelected={handleFileUpload}
         isUploading={uploadedFile !== null}
+        uploadProgress={uploadProgress}
+        uploadingFileName={uploadedFile?.name}
       />
 
       {previewFile && (

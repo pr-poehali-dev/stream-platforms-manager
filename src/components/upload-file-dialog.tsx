@@ -17,9 +17,11 @@ interface UploadFileDialogProps {
   onClose: () => void;
   onFileSelected: (file: File) => void;
   isUploading: boolean;
+  uploadProgress?: number;
+  uploadingFileName?: string;
 }
 
-export function UploadFileDialog({ isOpen, onClose, onFileSelected, isUploading }: UploadFileDialogProps) {
+export function UploadFileDialog({ isOpen, onClose, onFileSelected, isUploading, uploadProgress = 0, uploadingFileName }: UploadFileDialogProps) {
   const [selectedTypes, setSelectedTypes] = useState<string[]>(FILE_TYPES.map(t => t.id));
   const [dragActive, setDragActive] = useState(false);
   const [showFilterPopover, setShowFilterPopover] = useState(false);
@@ -170,13 +172,28 @@ export function UploadFileDialog({ isOpen, onClose, onFileSelected, isUploading 
                   <Icon name="Upload" size={56} className="text-muted-foreground" />
                 )}
                 
-                <div>
+                <div className="w-full">
                   <p className="font-semibold text-lg mb-1">
                     {isUploading ? 'Загрузка...' : 'Перетащите файл сюда'}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    или нажмите для выбора
+                    {isUploading && uploadingFileName ? uploadingFileName : 'или нажмите для выбора'}
                   </p>
+                  
+                  {isUploading && uploadProgress > 0 && (
+                    <div className="mt-3 w-full">
+                      <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                        <span>Прогресс</span>
+                        <span>{uploadProgress}%</span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                        <div 
+                          className="h-full bg-primary transition-all duration-300 ease-out"
+                          style={{ width: `${uploadProgress}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {selectedTypes.length > 0 && !isUploading && (

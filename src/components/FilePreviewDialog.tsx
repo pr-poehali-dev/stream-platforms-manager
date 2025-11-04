@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { FileItem } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from 'react';
 
 interface FilePreviewDialogProps {
   file: FileItem | null;
@@ -13,6 +14,30 @@ interface FilePreviewDialogProps {
 
 export function FilePreviewDialog({ file, isOpen, onClose, onDelete }: FilePreviewDialogProps) {
   const { toast } = useToast();
+  const [deleteTimer, setDeleteTimer] = useState<number | null>(null);
+  const [deleteCountdown, setDeleteCountdown] = useState<number>(0);
+  
+  useEffect(() => {
+    if (deleteTimer !== null && deleteCountdown > 0) {
+      const interval = setInterval(() => {
+        setDeleteCountdown(prev => prev - 1);
+      }, 1000);
+      return () => clearInterval(interval);
+    } else if (deleteCountdown === 0 && deleteTimer !== null) {
+      if (onDelete) {
+        onDelete(file!.id);
+        onClose();
+      }
+      setDeleteTimer(null);
+    }
+  }, [deleteCountdown, deleteTimer, onDelete, file, onClose]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setDeleteTimer(null);
+      setDeleteCountdown(0);
+    }
+  }, [isOpen]);
   
   if (!file) return null;
 
@@ -38,7 +63,9 @@ export function FilePreviewDialog({ file, isOpen, onClose, onDelete }: FilePrevi
     return file.mime_type.startsWith('image/') || 
            file.mime_type.startsWith('video/') || 
            file.mime_type.startsWith('audio/') ||
-           file.mime_type === 'application/pdf';
+           file.mime_type === 'application/pdf' ||
+           file.mime_type.includes('presentation') ||
+           file.mime_type.includes('powerpoint');
   };
 
   const handleDownload = () => {
@@ -63,12 +90,19 @@ export function FilePreviewDialog({ file, isOpen, onClose, onDelete }: FilePrevi
   };
 
   const handleDelete = () => {
-    if (onDelete) {
-      onDelete(file.id);
-      onClose();
+    if (deleteTimer !== null) {
+      setDeleteTimer(null);
+      setDeleteCountdown(0);
       toast({
-        title: 'Удаление файла',
-        description: 'Файл удаляется...'
+        title: 'Отменено',
+        description: 'Удаление файла отменено'
+      });
+    } else {
+      setDeleteCountdown(4);
+      setDeleteTimer(Date.now());
+      toast({
+        title: 'Удаление запланировано',
+        description: 'У вас есть 4 секунды чтобы отменить'
       });
     }
   };
@@ -96,9 +130,16 @@ export function FilePreviewDialog({ file, isOpen, onClose, onDelete }: FilePrevi
               <Icon name="Download" size={16} className="mr-2" />
               Скачать
             </Button>
-            <Button variant="outline" className="justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950" onClick={handleDelete}>
-              <Icon name="Trash2" size={16} className="mr-2" />
-              Удалить
+            <Button 
+              variant={deleteTimer !== null ? "default" : "outline"} 
+              className={deleteTimer !== null 
+                ? "justify-start bg-yellow-600 hover:bg-yellow-700 text-white" 
+                : "justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+              }
+              onClick={handleDelete}
+            >
+              <Icon name={deleteTimer !== null ? "X" : "Trash2"} size={16} className="mr-2" />
+              {deleteTimer !== null ? `Отменить (${deleteCountdown}с)` : 'Удалить'}
             </Button>
           </div>
 
@@ -134,6 +175,13 @@ export function FilePreviewDialog({ file, isOpen, onClose, onDelete }: FilePrevi
                     src={file.file_url} 
                     className="w-full h-[500px] rounded-lg" 
                     title={file.original_filename} 
+                  />
+                )}
+                {(file.mime_type.includes('presentation') || file.mime_type.includes('powerpoint')) && (
+                  <iframe 
+                    src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(file.file_url)}`}
+                    className="w-full h-[500px] rounded-lg" 
+                    title={file.original_filename}
                   />
                 )}
               </div>

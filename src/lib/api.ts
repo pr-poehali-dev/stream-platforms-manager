@@ -132,13 +132,23 @@ class ApiClient {
     return response.json();
   }
 
-  async uploadFile(file: File): Promise<FileItem> {
+  async uploadFile(file: File, onProgress?: (percent: number) => void): Promise<FileItem> {
     if (!this.token) throw new Error('Not authenticated');
 
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
+      
+      reader.onprogress = (event) => {
+        if (event.lengthComputable && onProgress) {
+          const percent = Math.round((event.loaded / event.total) * 50);
+          onProgress(percent);
+        }
+      };
+      
       reader.onload = async () => {
         const base64 = (reader.result as string).split(',')[1];
+        
+        if (onProgress) onProgress(50);
         
         const response = await fetch(API_BASE.files, {
           method: 'POST',
@@ -154,10 +164,13 @@ class ApiClient {
           }),
         });
 
+        if (onProgress) onProgress(90);
+
         if (!response.ok) {
           const error = await response.json();
           reject(new Error(error.error || 'Failed to upload file'));
         } else {
+          if (onProgress) onProgress(100);
           resolve(await response.json());
         }
       };
