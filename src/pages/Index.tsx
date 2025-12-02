@@ -28,6 +28,8 @@ import { FILE_TYPES } from '@/components/file-type-filter';
 import { UploadFileDialog } from '@/components/upload-file-dialog';
 import { SearchMenu } from '@/components/search-menu';
 import { ContactForm } from '@/components/contact-form';
+import { MessagesWidget } from '@/components/messages-widget';
+import { MediaPlayer } from '@/components/media-player';
 
 
 interface Platform {
@@ -119,6 +121,7 @@ const Index = () => {
   const [showMoveToFolderDialog, setShowMoveToFolderDialog] = useState(false);
   const [fileToMove, setFileToMove] = useState<ApiFileItem | null>(null);
   const [showContactForm, setShowContactForm] = useState(false);
+  const [mediaPlayerFile, setMediaPlayerFile] = useState<ApiFileItem | null>(null);
   const { toast } = useToast();
 
   const handleFileTypesChange = (types: string[]) => {
@@ -1121,13 +1124,32 @@ const Index = () => {
                       </Button>
                       <div 
                         className="p-6 cursor-pointer"
-                        onClick={() => {
-                          setSelectedApiFile(file);
+                        onClick={async () => {
+                          const isMedia = file.mime_type.startsWith('video/') || file.mime_type.startsWith('audio/');
+                          if (isMedia) {
+                            try {
+                              const fullFile = await api.getFile(file.id);
+                              setMediaPlayerFile(fullFile);
+                            } catch (error) {
+                              toast({
+                                title: 'Ошибка',
+                                description: 'Не удалось загрузить файл',
+                                variant: 'destructive',
+                              });
+                            }
+                          } else {
+                            setSelectedApiFile(file);
+                          }
                         }}
                       >
                         <div className="flex items-start gap-4">
-                          <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-green-700">
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-green-700 relative">
                             <Icon name={getFileIcon(file.mime_type) as any} size={24} className="text-white" />
+                            {(file.mime_type.startsWith('video/') || file.mime_type.startsWith('audio/')) && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-xl">
+                                <Icon name="Play" size={16} className="text-white" />
+                              </div>
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <h3 className="text-lg font-bold mb-1 truncate" title={file.original_filename}>{file.original_filename}</h3>
@@ -1512,10 +1534,25 @@ const Index = () => {
         onOpenChange={setShowContactForm} 
       />
 
+      <MessagesWidget isAuthenticated={isAuthenticated} />
+
       {getLoggingEnabled() && (
-        <div className="fixed bottom-6 right-6 w-96 z-50">
+        <div className="fixed bottom-6 left-6 w-96 z-50">
           <ActivityLog maxEntries={50} />
         </div>
+      )}
+
+      {mediaPlayerFile && (
+        <Dialog open={!!mediaPlayerFile} onOpenChange={() => setMediaPlayerFile(null)}>
+          <DialogContent className="max-w-5xl p-0">
+            <MediaPlayer
+              src={mediaPlayerFile.file_url}
+              type={mediaPlayerFile.mime_type}
+              title={mediaPlayerFile.original_filename}
+              onClose={() => setMediaPlayerFile(null)}
+            />
+          </DialogContent>
+        </Dialog>
       )}
 
       {contextMenuPosition && contextMenuFile && (

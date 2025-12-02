@@ -133,6 +133,24 @@ class ApiClient {
     return response.json();
   }
 
+  async getFile(fileId: number): Promise<FileItem> {
+    if (!this.token) throw new Error('Not authenticated');
+
+    const response = await fetch(`${API_BASE.files}?id=${fileId}`, {
+      method: 'GET',
+      headers: {
+        'X-Auth-Token': this.token,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch file');
+    }
+
+    return response.json();
+  }
+
   async uploadFile(file: File, onProgress?: (percent: number) => void): Promise<FileItem> {
     if (!this.token) throw new Error('Not authenticated');
 
