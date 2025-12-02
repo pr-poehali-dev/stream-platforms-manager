@@ -660,11 +660,11 @@ const Index = () => {
             
             <Button 
               variant="ghost" 
+              size="icon"
               className="text-white hover:bg-white/20"
               onClick={() => setShowContactForm(true)}
             >
-              <Icon name="Mail" size={20} className="mr-2" />
-              Связаться
+              <Icon name="Mail" size={20} />
             </Button>
 
             {isAuthenticated ? (

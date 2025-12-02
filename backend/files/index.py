@@ -91,10 +91,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'body': json.dumps(dict(file), default=str)
             }
         else:
+            limit = int(query_params.get('limit', '50'))
+            offset = int(query_params.get('offset', '0'))
+            
             cur.execute(
-                "SELECT id, filename, original_filename, file_type, file_size, file_url, mime_type, created_at FROM files WHERE user_id = %s ORDER BY created_at DESC",
-                (user_id,)
+                '''SELECT id, filename, original_filename, file_type, file_size, 
+                   CONCAT('/files/', id) as file_url, mime_type, created_at 
+                   FROM files WHERE user_id = %s ORDER BY created_at DESC LIMIT %s OFFSET %s''',
+                (user_id, limit, offset)
             )
+            
             files = cur.fetchall()
             cur.close()
             conn.close()
