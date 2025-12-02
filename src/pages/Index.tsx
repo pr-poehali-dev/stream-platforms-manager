@@ -700,6 +700,12 @@ const Index = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {isAuthenticated && (
+                  <DropdownMenuItem onClick={() => window.location.href = '/messages'}>
+                    <Icon name="Inbox" size={16} className="mr-2" />
+                    Входящие сообщения
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => setShowVideoDownloader(true)}>
                   <Icon name="Download" size={16} className="mr-2" />
                   Скачать видео

@@ -3,6 +3,7 @@ const API_BASE = {
   files: 'https://functions.poehali.dev/7744eb57-850b-4771-a55c-ffaa2f392d95',
   profile: 'https://functions.poehali.dev/851060a1-7583-49be-bcb8-34d613b58cf9',
   userData: 'https://functions.poehali.dev/7bdf2eba-1cb5-4d33-84f1-ccea93a34ef3',
+  contact: 'https://functions.poehali.dev/ae169bd9-51f9-4d20-8502-d56df54870d4',
 };
 
 export interface User {
@@ -324,7 +325,7 @@ class ApiClient {
     subject: string;
     message: string;
   }): Promise<void> {
-    const response = await fetch('https://functions.poehali.dev/ae169bd9-51f9-4d20-8502-d56df54870d4', {
+    const response = await fetch(API_BASE.contact, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -335,6 +336,74 @@ class ApiClient {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to send message');
+    }
+  }
+
+  async getMessages(): Promise<any[]> {
+    if (!this.token) throw new Error('Not authenticated');
+
+    const response = await fetch(API_BASE.contact, {
+      method: 'GET',
+      headers: {
+        'X-Auth-Token': this.token,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to get messages');
+    }
+
+    return response.json();
+  }
+
+  async markMessageAsRead(messageId: number): Promise<void> {
+    if (!this.token) throw new Error('Not authenticated');
+
+    const response = await fetch(`${API_BASE.contact}/${messageId}/read`, {
+      method: 'PUT',
+      headers: {
+        'X-Auth-Token': this.token,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to mark as read');
+    }
+  }
+
+  async deleteMessage(messageId: number): Promise<void> {
+    if (!this.token) throw new Error('Not authenticated');
+
+    const response = await fetch(`${API_BASE.contact}/${messageId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-Auth-Token': this.token,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete message');
+    }
+  }
+
+  async replyToMessage(messageId: number, replyText: string): Promise<void> {
+    if (!this.token) throw new Error('Not authenticated');
+
+    const response = await fetch(`${API_BASE.contact}/${messageId}/reply`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Auth-Token': this.token,
+      },
+      body: JSON.stringify({ reply: replyText }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to send reply');
     }
   }
 }
