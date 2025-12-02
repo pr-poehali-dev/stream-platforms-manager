@@ -27,6 +27,7 @@ import { ActivityLog, addLog, getLoggingEnabled } from '@/components/activity-lo
 import { FILE_TYPES } from '@/components/file-type-filter';
 import { UploadFileDialog } from '@/components/upload-file-dialog';
 import { SearchMenu } from '@/components/search-menu';
+import { ContactForm } from '@/components/contact-form';
 
 
 interface Platform {
@@ -117,6 +118,7 @@ const Index = () => {
   const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const [showMoveToFolderDialog, setShowMoveToFolderDialog] = useState(false);
   const [fileToMove, setFileToMove] = useState<ApiFileItem | null>(null);
+  const [showContactForm, setShowContactForm] = useState(false);
   const { toast } = useToast();
 
   const handleFileTypesChange = (types: string[]) => {
@@ -655,6 +657,15 @@ const Index = () => {
             )}
             
             <SearchMenu />
+            
+            <Button 
+              variant="ghost" 
+              className="text-white hover:bg-white/20"
+              onClick={() => setShowContactForm(true)}
+            >
+              <Icon name="Mail" size={20} className="mr-2" />
+              Связаться
+            </Button>
 
             {isAuthenticated ? (
               <DropdownMenu>
@@ -1489,6 +1500,11 @@ const Index = () => {
           />
         </DialogContent>
       </Dialog>
+
+      <ContactForm 
+        open={showContactForm} 
+        onOpenChange={setShowContactForm} 
+      />
 
       {getLoggingEnabled() && (
         <div className="fixed bottom-6 right-6 w-96 z-50">

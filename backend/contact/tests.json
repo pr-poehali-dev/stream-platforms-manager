@@ -1,0 +1,33 @@
+{
+  "tests": [
+    {
+      "name": "Valid contact message",
+      "method": "POST",
+      "body": {
+        "name": "John Doe",
+        "email": "john@example.com",
+        "subject": "Test message",
+        "message": "Hello, this is a test message"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "message": "string",
+        "id": "number"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Missing required fields",
+      "method": "POST",
+      "body": {
+        "name": "John"
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

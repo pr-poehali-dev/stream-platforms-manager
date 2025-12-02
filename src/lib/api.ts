@@ -153,36 +153,20 @@ class ApiClient {
     if (onProgress) onProgress(1);
 
     return new Promise((resolve, reject) => {
-      const chunkSize = 1024 * 1024;
-      let offset = 0;
-      const base64Parts: string[] = [];
+      const reader = new FileReader();
       
-      const readNextChunk = () => {
-        const slice = file.slice(offset, offset + chunkSize);
-        const reader = new FileReader();
-        
-        reader.onload = (e) => {
-          const result = e.target?.result as string;
-          const base64 = result.split(',')[1];
-          base64Parts.push(base64);
-          
-          offset += chunkSize;
-          const readProgress = Math.min(Math.round((offset / file.size) * 30), 30);
-          if (onProgress) onProgress(readProgress);
-          
-          if (offset < file.size) {
-            readNextChunk();
-          } else {
-            uploadFile(base64Parts.join(''));
-          }
-        };
-        
-        reader.onerror = () => reject(new Error('Failed to read file'));
-        reader.readAsDataURL(slice);
+      reader.onprogress = (e) => {
+        if (e.lengthComputable && onProgress) {
+          const readProgress = Math.min(Math.round((e.loaded / e.total) * 30), 30);
+          onProgress(readProgress);
+        }
       };
       
-      const uploadFile = async (base64: string) => {
+      reader.onload = async (e) => {
         try {
+          const result = e.target?.result as string;
+          const base64 = result.split(',')[1];
+          
           if (onProgress) onProgress(35);
           
           const xhr = new XMLHttpRequest();
@@ -223,7 +207,8 @@ class ApiClient {
         }
       };
       
-      readNextChunk();
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
     });
   }
 
@@ -330,6 +315,26 @@ class ApiClient {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to save user data');
+    }
+  }
+
+  async sendContactMessage(data: {
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+  }): Promise<void> {
+    const response = await fetch('https://functions.poehali.dev/ae169bd9-51f9-4d20-8502-d56df54870d4', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to send message');
     }
   }
 }
